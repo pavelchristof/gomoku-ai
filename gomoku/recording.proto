@@ -1,0 +1,13 @@
+syntax = "proto3";
+option cc_enable_arenas = true;
+
+package gomoku;
+
+message Recording {
+  message Move {
+    int32 x = 1;
+    int32 y = 2;
+  }
+  repeated Move move = 1;
+  float score = 2;
+}
