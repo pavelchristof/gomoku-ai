@@ -119,6 +119,7 @@ py_binary(
     srcs = ["train.py"],
     deps = [
         ":networks",
+        ":replay_ops",
         "//tensorflow:tensorflow_py",
     ]
 )

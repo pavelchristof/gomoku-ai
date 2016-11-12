@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from gomoku import networks
+from gomoku import replay_ops
 
 tf.app.flags.DEFINE_string('replay_dir', 'data/replays/',
                      'Directory containing the replay files for training.')
@@ -15,13 +16,14 @@ def main(argv):
       tf.python_io.TFRecordCompressionType.ZLIB)
   reader = tf.TFRecordReader(options=options)
   key, record_string = reader.read(filename_queue)
+  features, scores = replay_ops.decode_replays(record_string)
 
   with tf.Session() as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
     print(sess.run(replay_files))
-    print(sess.run([key, record_string]))
+    print(sess.run([features, scores]))
 
     coord.request_stop()
     coord.join(threads)
