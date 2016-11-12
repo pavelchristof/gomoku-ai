@@ -86,8 +86,8 @@ cc_binary(
 )
 
 tf_custom_op_library(
-    name = "replay_ops.so",
-    srcs = ["replay_ops.cc"],
+    name = "replay_ops_kernel.so",
+    srcs = ["replay_ops_kernel.cc"],
     deps = [
         ":board",
         ":features",
@@ -98,7 +98,7 @@ tf_custom_op_library(
 py_library(
     name = "replay_ops",
     srcs = ["replay_ops.py"],
-    data = ["replay_ops.so"],
+    data = ["replay_ops_kernel.so"],
     deps = [
         "//tensorflow:tensorflow_py",
     ]
