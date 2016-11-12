@@ -9,7 +9,7 @@ neural networks pre-trained with self-play.
 What are all these files and commits
 ====================================
 
-This is based on the TensorFlow repo. It is simple the easiest (the only?) way
+This is based on the TensorFlow repo. It is the easiest (the only?) way
 to build and link to the TensorFlow C++ API with bazel.
 
 Requirements
