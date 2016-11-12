@@ -36,7 +36,7 @@ $> bazel -c opt build gomoku:all
 How to use
 ==========
 
-Only self-play is in a runnable state (and very crude).
+Crude self-play and value network training is implemented.
 
 To start self-play do:
 ```bash
@@ -44,3 +44,13 @@ $> ./bazel-bin/gomoku/self_play
 ```
 
 This will write replays to "data/replays/", rotating if there are too many.
+Currently self-play launches random actors. Basic monte carlo is next on the
+TODO list.
+
+To start training do:
+```bash
+$> ./bazel-bin/gomoku/train
+```
+
+This will read replays from "data/replays/" and write model checkpoints and
+TensorBoard summaries to "data/model/". Training runs but needs a lot more work!

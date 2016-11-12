@@ -2,7 +2,7 @@
 import tensorflow as tf
 from tensorflow.contrib import layers
 
-def Policy(board):
+def policy(board):
   """Builds a policy network.
 
   The policy network predicts the expected value (win chance) of actions for a
@@ -21,7 +21,7 @@ def Policy(board):
   net = layers.conv2d(net, 1, [9, 9], scope='conv9_3')
   return net
 
-def Value(board):
+def value(board):
   """Builds a value network.
 
   The policy network predicts the expected value (win chance) of a state,
