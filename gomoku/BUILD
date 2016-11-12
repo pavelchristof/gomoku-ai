@@ -72,7 +72,7 @@ cc_library(
         ":actor",
         ":recording_proto_cc",
         "//tensorflow/core:lib",
-        "//third_party/gflags",
+        "@gflags//:gflags",
     ],
 )
 
@@ -92,7 +92,6 @@ tf_custom_op_library(
         ":board",
         ":features",
         ":recording_proto_cc",
-        "//tensorflow/core:framework",
     ]
 )
 

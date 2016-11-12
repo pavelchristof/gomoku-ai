@@ -477,3 +477,9 @@ http_file(
   name = "weblas_weblas_js",
   url = "https://raw.githubusercontent.com/waylonflinn/weblas/v0.9.0/dist/weblas.js",
 )
+
+git_repository(
+  name = "gflags",
+  remote = "https://github.com/pawel-n/gflags",
+  commit = "3246b129b9a11f254ebb4dbbdf17a75770c8c81c",
+)
