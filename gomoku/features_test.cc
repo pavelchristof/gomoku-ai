@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "gomoku/features.h"
+#include "tensorflow/core/platform/test.h"
 
 namespace gomoku {
 

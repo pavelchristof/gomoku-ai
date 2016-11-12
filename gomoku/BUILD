@@ -24,7 +24,7 @@ cc_test(
     srcs = ["board_test.cc"],
     deps = [
         ":board",
-        "//tensorflow/core:lib",
+        "//tensorflow/core:test",
     ],
 )
 
@@ -44,7 +44,7 @@ cc_test(
     srcs = ["features_test.cc"],
     deps = [
         ":features",
-        "//tensorflow/core:lib",
+        "//tensorflow/core:test",
     ],
 )
 
