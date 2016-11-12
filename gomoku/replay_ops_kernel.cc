@@ -15,15 +15,20 @@ namespace gomoku {
 
 REGISTER_OP("DecodeReplays")
     .Input("records: string")
-    .Output("features: float")
-    .Output("scores: float")
+    .Output("features: float32")
+    .Output("scores: float32")
     .SetShapeFn([](InferenceContext* c) {
+      // Validate records.
+      ShapeHandle records;
+      TF_RETURN_IF_ERROR(c->WithRankAtMost(c->input(0), 1, &records));
+
       DimensionHandle rebatch_dim = c->UnknownDim();
       ShapeHandle board_shape = c->MakeShape({
           rebatch_dim, Board::kWidth, Board::kHeight,
           static_cast<int>(DefaultFeatures().size())});
       c->set_output(0, board_shape);
       ShapeHandle score_shape = c->MakeShape({rebatch_dim});
+      CHECK(c->RankKnown(board_shape));
       c->set_output(1, score_shape);
       return Status::OK();
     })

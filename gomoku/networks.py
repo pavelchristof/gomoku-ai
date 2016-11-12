@@ -2,7 +2,7 @@
 import tensorflow as tf
 from tensorflow.contrib import layers
 
-def PolicyModel(board):
+def Policy(board):
   """Builds a policy network.
 
   The policy network predicts the expected value (win chance) of actions for a
@@ -21,7 +21,7 @@ def PolicyModel(board):
   net = layers.conv2d(net, 1, [9, 9], scope='conv9_3')
   return net
 
-def ValueModel(board):
+def Value(board):
   """Builds a value network.
 
   The policy network predicts the expected value (win chance) of a state,
@@ -36,7 +36,8 @@ def ValueModel(board):
   """
   net = layers.conv2d(board, 128, [9, 9], scope='conv9_1')
   net = layers.conv2d(net, 64, [9, 9], scope='conv9_2')
-  net = layers.conv2d(net, 16, [9, 9], scope='conv9_2')
+  net = layers.conv2d(net, 16, [9, 9], scope='conv9_3')
+  net = layers.flatten(net)
   net = layers.fully_connected(net, 512)
   net = layers.dropout(net)
   net = layers.fully_connected(net, 1)

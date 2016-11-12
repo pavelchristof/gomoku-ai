@@ -40,7 +40,7 @@ Only self-play is in a runnable state (and very crude).
 
 To start self-play do:
 ```bash
-$> ./bazel-bin/gomoku/self_play --alsologtostderr
+$> ./bazel-bin/gomoku/self_play
 ```
 
 This will write replays to "data/replays/", rotating if there are too many.
