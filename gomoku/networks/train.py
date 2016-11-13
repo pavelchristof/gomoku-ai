@@ -102,7 +102,7 @@ def model(features, scores):
 
 def main(_):
   config = tf.contrib.learn.RunConfig(
-      save_summary_steps=10,
+      save_summary_steps=100,
       save_checkpoints_secs=300)
   estimator = tf.contrib.learn.Estimator(
       model_fn=model, model_dir=FLAGS.model_dir, config=config)

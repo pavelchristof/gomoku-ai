@@ -20,10 +20,10 @@ The current status is:
   * Self-play plays random games and records them.
   * The training pipeline reads these file, constructs features and trains
     a convolutional value network.
+  * GPU training is 20x faster then CPU on my machine.
 
 The TODO list is:
 
-  * Prepare GPU training, CPU is too slow.
   * Implement basic Monte Carlo search to get better training data.
   * Compare how the network learns on random games vs Monte Carlo search.
   * Design some better evaluation strategy, perhaps an ELO ranking.
