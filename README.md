@@ -62,7 +62,7 @@ $> ./configure
 ```
 
 Next, build gomoku with all its dependencies. Add the '--config=cuda' option
-if you want to use GPU:
+if you configured with GPU and want to use it:
 
 ```bash
 $> bazel build -c opt --config=cuda gomoku/self_play:self_play gomoku/networks:train
