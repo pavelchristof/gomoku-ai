@@ -91,6 +91,7 @@ def model(features, scores):
         decay_steps=500,
         decay_rate=0.94,
         staircase=True)
+    tf.summary.scalar('learning_rate', learning_rate)
     train_op = tf.contrib.layers.optimize_loss(
         loss=total_loss,
         global_step=global_step,
