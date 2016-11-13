@@ -83,9 +83,6 @@ def input():
 def score_metrics(predicted_scores, scores):
   """Computes metrics for scores (victory probability)."""
   tf.summary.histogram('predicted_scores', predicted_scores)
-  mean_squared_loss = tf.contrib.losses.mean_squared_error(
-      predicted_scores, scores)
-  tf.summary.scalar('mean_squared_loss', mean_squared_loss)
 
 
 def binary_metrics(predicted_labels, labels):
@@ -105,14 +102,17 @@ def model(features, scores):
     predicted_logits = networks.value(features)
     predicted_scores = tf.nn.sigmoid(predicted_logits)
 
-    # Compute the sigmoid loss, used for training.
+    # Compute the losses, used for training.
     sigmoid_loss = tf.contrib.losses.sigmoid_cross_entropy(
         predicted_logits, scores)
     tf.summary.scalar('sigmoid_loss', sigmoid_loss)
-    total_loss = tf.contrib.losses.get_total_loss()
+    mean_squared_loss = tf.contrib.losses.mean_squared_error(
+        predicted_scores, scores)
+    tf.summary.scalar('mean_squared_loss', mean_squared_loss)
+    loss = mean_squared_loss
 
     # Compute the in-training metrics.
-    score_metrics(predicted_scores, scores)
+    mean_squared_loss = score_metrics(predicted_scores, scores)
     update_metrics_op = binary_metrics(predicted_logits >= 0.0, scores >= 0.5)
 
     # Use exponentially decaying learning rate.
@@ -127,13 +127,13 @@ def model(features, scores):
 
     # Standard SGD for now.
     train_op = tf.contrib.layers.optimize_loss(
-        loss=total_loss,
+        loss=loss,
         global_step=global_step,
         learning_rate=learning_rate,
         optimizer='SGD')
 
     all_ops = tf.group(train_op, update_metrics_op)
-    return predicted_scores, total_loss, all_ops
+    return predicted_scores, loss, all_ops
 
 
 def main(_):
