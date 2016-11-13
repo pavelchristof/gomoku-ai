@@ -3,7 +3,7 @@ gomoku-ai
 
 Gomoku AI with neural networks and self-play (instensive WIP!).
 
-This is (will be) a small, powerful and scalable implementation of Monte Carlo
+This is (will be) a small, but powerful and scalable implementation of Monte Carlo
 Tree Search bootstrapped with policy and value neural networks trained with
 self-play, inspired by AlphaGo. It is written in a mix of C++ and Python, using
 TensorFlow. Simplicity is favored, but performance is not sacrificed.
