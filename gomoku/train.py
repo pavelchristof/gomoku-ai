@@ -84,10 +84,17 @@ def model(features, scores):
     predicted_scores = networks.value(features)
     tf.contrib.losses.sigmoid_cross_entropy(predicted_scores, scores)
     total_loss = tf.contrib.losses.get_total_loss()
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    learning_rate = tf.train.exponential_decay(
+        0.1,
+        global_step=global_step,
+        decay_steps=500,
+        decay_rate=0.94,
+        staircase=True)
     train_op = tf.contrib.layers.optimize_loss(
         loss=total_loss,
-        global_step=tf.contrib.framework.get_or_create_global_step(),
-        learning_rate=0.1,
+        global_step=global_step,
+        learning_rate=learning_rate,
         optimizer='SGD')
     return predicted_scores, total_loss, train_op
 
