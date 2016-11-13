@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "gomoku/core/board.h"
-#include "gomoku/core/features.h"
+#include "gomoku/core/feature.h"
 
 namespace gomoku {
 

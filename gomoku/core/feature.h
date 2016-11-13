@@ -1,5 +1,5 @@
-#ifndef GOMOKU_CORE_FEATURES_H
-#define GOMOKU_CORE_FEATURES_H
+#ifndef GOMOKU_CORE_FEATURE_H
+#define GOMOKU_CORE_FEATURE_H
 
 #include <map>
 #include <random>
@@ -18,9 +18,6 @@ using Feature = std::function<FeatureMatrix(const Board&)>;
 // A collection of named features.
 using Features = std::map<std::string, Feature>;
 
-// The default features used as the neural network input.
-Features DefaultFeatures();
-
 // Builds a matrix that contain 1.0 at positions where the given player has
 // a stone and 0 in all other position.
 FeatureMatrix StoneMatrix(const Board& board, Player player);
@@ -37,4 +34,4 @@ Eigen::Vector2i SampleWeightMatrix(
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_CORE_FEATURES_H
+#endif  // GOMOKU_CORE_FEATURE_H

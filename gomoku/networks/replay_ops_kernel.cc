@@ -1,6 +1,6 @@
 #include "gomoku/core/board.h"
-#include "gomoku/core/features.h"
 #include "gomoku/core/recording.pb.h"
+#include "gomoku/networks/default_features.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/shape_inference.h"

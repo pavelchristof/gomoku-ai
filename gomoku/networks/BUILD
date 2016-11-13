@@ -10,12 +10,22 @@ py_library(
     ]
 )
 
+cc_library(
+    name = "default_features",
+    hdrs = ["default_features.h"],
+    srcs = ["default_features.cc"],
+    deps = [
+        "//gomoku/core:feature",
+        "//third_party/eigen3",
+    ],
+)
+
 tf_custom_op_library(
     name = "replay_ops_kernel.so",
     srcs = ["replay_ops_kernel.cc"],
     deps = [
+        ":default_features",
         "//gomoku/core:board",
-        "//gomoku/core:features",
         "//gomoku/core:recording_proto_cc",
     ]
 )

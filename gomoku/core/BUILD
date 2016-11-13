@@ -22,9 +22,9 @@ cc_test(
 )
 
 cc_library(
-    name = "features",
-    hdrs = ["features.h"],
-    srcs = ["features.cc"],
+    name = "feature",
+    hdrs = ["feature.h"],
+    srcs = ["feature.cc"],
     deps = [
         ":board",
         "//tensorflow/core:framework_headers_lib",
@@ -33,10 +33,10 @@ cc_library(
 )
 
 cc_test(
-    name = "features_test",
-    srcs = ["features_test.cc"],
+    name = "feature_test",
+    srcs = ["feature_test.cc"],
     deps = [
-        ":features",
+        ":feature",
         "//tensorflow/core:test",
     ],
 )
@@ -47,7 +47,7 @@ cc_library(
     srcs = ["actor.cc"],
     deps = [
         ":board",
-        ":features",
+        ":feature",
     ],
 )
 
