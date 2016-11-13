@@ -1,6 +1,7 @@
 import os.path
 
 import tensorflow as tf
+from tensorflow.python.framework import ops
 from tensorflow.python.client import timeline
 
 from gomoku import networks
@@ -15,6 +16,9 @@ tf.app.flags.DEFINE_string(
     'If tracing is enabled the timelines will be written there.')
 tf.app.flags.DEFINE_boolean('trace', False,
                             'Whether performance tracing should be enabled.')
+tf.app.flags.DEFINE_integer(
+    'batch_size', 256,
+    'How many game position should be in a single batch.')
 FLAGS = tf.app.flags.FLAGS
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -39,18 +43,41 @@ class TimelineHook(tf.train.SessionRunHook):
       f.write(data)
     self._counter += 1
 
-
 def input():
-  replay_files = tf.train.match_filenames_once(FLAGS.replay_dir + "*.tfrecords")
-  filename_queue = tf.train.string_input_producer(replay_files)
-  options = tf.python_io.TFRecordOptions(
-      tf.python_io.TFRecordCompressionType.ZLIB)
-  reader = tf.TFRecordReader(options=options)
-  key, record_string = reader.read(filename_queue)
-  features, scores = replay_ops.decode_replays(record_string)
-  batch_size = tf.size(scores)
-  tf.summary.scalar('batch_size', batch_size)
-  return features, scores
+  with tf.name_scope('input'):
+    # Scan the available replay files and put them in a queue.
+    # TODO: support rotating logs
+    replay_files = tf.train.match_filenames_once(
+        of.path.join(FLAGS.replay_dir, "*.tfrecords"))
+    filename_queue = tf.train.string_input_producer(
+        replay_files,
+        capacity=20,
+        shuffle=True,
+        name="filename_queue")
+
+    # Read single records from the files.
+    options = tf.python_io.TFRecordOptions(
+        tf.python_io.TFRecordCompressionType.ZLIB)
+    reader = tf.TFRecordReader(options=options)
+    key, record_string = reader.read(filename_queue, name="read_record")
+
+    # Decode each replay into a batch of training features, one for each
+    # game position in the replay.
+    features, scores = replay_ops.decode_replays(
+        record_string, name="decode_replays")
+    game_length = tf.size(scores)
+    tf.summary.scalar('game_length', game_length)
+
+    # Rebatch into constant size batches.
+    return tf.train.shuffle_batch(
+        [features, scores],
+        batch_size=FLAGS.batch_size,
+        enqueue_many=True,
+        capacity=10000,
+        min_after_dequeue=5000,
+        num_threads=2,
+        name="rebatched_examples")
+
 
 def model(features, scores):
   with tf.variable_scope('value') as value_scope:
@@ -63,6 +90,7 @@ def model(features, scores):
         learning_rate=0.1,
         optimizer='SGD')
     return predicted_scores, total_loss, train_op
+
 
 def main(_):
   config = tf.contrib.learn.RunConfig(
