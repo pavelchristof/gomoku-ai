@@ -4,8 +4,8 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 from tensorflow.python.client import timeline
 
-from gomoku import networks
-from gomoku import replay_ops
+from gomoku.networks import networks
+from gomoku.networks import replay_ops
 
 tf.app.flags.DEFINE_string('replay_dir', 'data/replays/',
                      'Directory containing the replay files for training.')
