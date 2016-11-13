@@ -13,4 +13,12 @@ FeatureMatrix StoneMatrix(const Board& board, Player player) {
   return matrix;
 }
 
+Eigen::Vector2i SampleWeightMatrix(
+    const FeatureMatrix& weights, std::mt19937_64* rng) {
+  std::discrete_distribution<int> dist(
+      weights.data(), weights.data() + weights.size());
+  int index = dist(*rng);
+  return {index % Board::kWidth, index / Board::kWidth};
+}
+
 }  // namespace gomoku

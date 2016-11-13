@@ -23,14 +23,8 @@ using Features = std::map<std::string, Feature>;
 FeatureMatrix StoneMatrix(const Board& board, Player player);
 
 // Samples a position weighted by the given matrix.
-template <typename Rng>
 Eigen::Vector2i SampleWeightMatrix(
-    const FeatureMatrix& weights, Rng* rng) {
-  std::discrete_distribution<int> dist(
-      weights.data(), weights.data() + weights.size());
-  int index = dist(*rng);
-  return {index % Board::kWidth, index / Board::kWidth};
-}
+    const FeatureMatrix& weights, std::mt19937_64* rng);
 
 }  // namespace gomoku
 
