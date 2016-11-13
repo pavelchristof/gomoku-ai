@@ -48,7 +48,7 @@ def input():
     # Scan the available replay files and put them in a queue.
     # TODO: support rotating logs
     replay_files = tf.train.match_filenames_once(
-        of.path.join(FLAGS.replay_dir, "*.tfrecords"))
+        os.path.join(FLAGS.replay_dir, "*.tfrecords"))
     filename_queue = tf.train.string_input_producer(
         replay_files,
         capacity=20,
