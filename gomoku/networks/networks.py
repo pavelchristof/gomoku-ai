@@ -18,6 +18,7 @@ def policy(board):
   """
   net = layers.conv2d(board, 128, [9, 9], scope='conv9_1')
   net = layers.conv2d(net, 64, [9, 9], scope='conv9_2')
+  # TODO: relu here is wrong
   net = layers.conv2d(net, 1, [9, 9], scope='conv9_3')
   return net
 
@@ -39,6 +40,6 @@ def value(board):
   net = layers.flatten(net)
   net = layers.fully_connected(net, 512)
   net = layers.dropout(net)
-  net = layers.fully_connected(net, 1)
+  net = layers.fully_connected(net, 1, activation_fn=None)
   net = tf.squeeze(net, squeeze_dims=[1])
   return net
