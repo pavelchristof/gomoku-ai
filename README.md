@@ -22,7 +22,8 @@ The current status is:
     a convolutional value network.
   * GPU training is 20x faster then CPU on my machine.
   * The network quickly achieves 71% binary accuracy on random games, when
-    optimizing the mean square loss.
+    optimizing the mean square loss. Mean square loss gives more conservative
+    predictions, approximating the expected value of a position.
 
 The TODO list is:
 
