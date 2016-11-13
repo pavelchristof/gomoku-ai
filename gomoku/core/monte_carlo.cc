@@ -2,8 +2,8 @@
 
 namespace gomoku {
 
-McRandomCell::McRandomCell(const Board& board)
-  : legal_moves_(StoneMatrix(board, Player::NONE)) {}
+McRandomCell::McRandomCell(FeatureMatrix legal_moves)
+  : legal_moves_(std::move(legal_moves)) {}
 
 Eigen::Vector2i McRandomCell::GreedyMove(std::mt19937_64* rng) const {
   return SampleWeightMatrix(legal_moves_, rng);
@@ -15,10 +15,10 @@ Eigen::Vector2i McRandomCell::ExploringMove(std::mt19937_64* rng) const {
 
 McSamplingCell::McSamplingCell(
     FeatureMatrix scores,
-    const Board& board,
+    FeatureMatrix legal_moves,
     float learning_rate)
   : scores_(std::move(scores)),
-    legal_moves_(StoneMatrix(board, Player::NONE)),
+    legal_moves_(std::move(legal_moves)),
     learning_rate_(learning_rate) {}
 
 Eigen::Vector2i McSamplingCell::GreedyMove(std::mt19937_64*) const {
@@ -34,10 +34,10 @@ void McSamplingCell::Update(Eigen::Vector2i move, float score) {
 
 McSoftmaxSamplingCell::McSoftmaxSamplingCell(
     FeatureMatrix scores,
-    const Board& board,
+    FeatureMatrix legal_moves,
     float learning_rate,
     float temperature)
-  : McSamplingCell(std::move(scores), board, learning_rate),
+  : McSamplingCell(std::move(scores), std::move(legal_moves), learning_rate),
     temperature_(temperature) {}
 
 Eigen::Vector2i McSoftmaxSamplingCell::ExploringMove(std::mt19937_64* rng)

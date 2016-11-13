@@ -28,7 +28,7 @@ class McCell {
 // A cell that always plays a random move and doesn't keep any statistics.
 class McRandomCell : public McCell {
  public:
-  explicit McRandomCell(const Board& board);
+  explicit McRandomCell(FeatureMatrix legal_moves);
 
   Eigen::Vector2i GreedyMove(std::mt19937_64* rng) const override;
   Eigen::Vector2i ExploringMove(std::mt19937_64* rng) const override;
@@ -44,7 +44,7 @@ class McSamplingCell : public McCell {
  public:
   McSamplingCell(
       FeatureMatrix scores,
-      const Board& board,
+      FeatureMatrix legal_moves,
       float learning_rate);
 
   FeatureMatrix Scores() const { return scores_; }
@@ -65,7 +65,7 @@ class McSoftmaxSamplingCell : public McSamplingCell {
  public:
   McSoftmaxSamplingCell(
       FeatureMatrix scores,
-      const Board& board,
+      FeatureMatrix legal_moves,
       float learning_rate,
       float temperature);
 

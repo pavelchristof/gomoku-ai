@@ -4,9 +4,9 @@
 namespace gomoku {
 
 TEST(McSoftmaxSamplingCell, GreedyMove) {
-  Board board;
   FeatureMatrix scores = FeatureMatrix::Zero();
-  McSoftmaxSamplingCell cell(scores, board, 1.0f, 1.0f);
+  FeatureMatrix legal_moves = FeatureMatrix::Constant(1.0f);
+  McSoftmaxSamplingCell cell(scores, legal_moves, 1.0f, 1.0f);
   std::mt19937_64 rng(42);
 
   Eigen::Vector2i move_1 = {1, 2};
@@ -21,13 +21,13 @@ TEST(McSoftmaxSamplingCell, GreedyMove) {
 }
 
 TEST(McSoftmaxSamplingCell, ExploringMove) {
-  Board board;
+  FeatureMatrix legal_moves = FeatureMatrix::Zero();
   Board::Iter([&] (int x, int y) {
-    if ((x + y) % 2 == 0) board.ApplyMove({x, y});
+    if ((x + y) % 2 != 0) legal_moves(x, y) = 1.0f;
   });
 
   FeatureMatrix scores = FeatureMatrix::Zero();
-  McSoftmaxSamplingCell cell(scores, board, 1.0f, 1.0f);
+  McSoftmaxSamplingCell cell(scores, legal_moves, 1.0f, 1.0f);
   std::mt19937_64 rng(42);
   for (int i = 0; i < 1000; ++i) {
     auto move = cell.ExploringMove(&rng);
