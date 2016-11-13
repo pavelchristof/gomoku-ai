@@ -27,7 +27,6 @@ cc_library(
     srcs = ["feature.cc"],
     deps = [
         ":board",
-        "//tensorflow/core:framework_headers_lib",
         "//third_party/eigen3",
     ],
 )
@@ -38,6 +37,16 @@ cc_test(
     deps = [
         ":feature",
         "//tensorflow/core:test",
+    ],
+)
+
+cc_library(
+    name = "monte_carlo",
+    hdrs = ["monte_carlo.h"],
+    srcs = ["monte_carlo.cc"],
+    deps = [
+        ":board",
+        ":feature",
     ],
 )
 
