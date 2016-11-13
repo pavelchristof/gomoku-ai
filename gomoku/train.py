@@ -86,9 +86,9 @@ def model(features, scores):
     total_loss = tf.contrib.losses.get_total_loss()
     global_step = tf.contrib.framework.get_or_create_global_step()
     learning_rate = tf.train.exponential_decay(
-        0.1,
+        0.04,
         global_step=global_step,
-        decay_steps=500,
+        decay_steps=300,
         decay_rate=0.94,
         staircase=True)
     tf.summary.scalar('learning_rate', learning_rate)
