@@ -1,11 +1,11 @@
-#ifndef GOMOKU_ACTOR_H_
-#define GOMOKU_ACTOR_H_
+#ifndef GOMOKU_CORE_ACTOR_H_
+#define GOMOKU_CORE_ACTOR_H_
 
 #include <atomic>
 #include <memory>
 
-#include "gomoku/board.h"
-#include "gomoku/features.h"
+#include "gomoku/core/board.h"
+#include "gomoku/core/features.h"
 
 namespace gomoku {
 
@@ -50,4 +50,4 @@ using ActorFactory = std::function<std::unique_ptr<Actor>()>;
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_ACTOR_H_
+#endif  // GOMOKU_CORE_ACTOR_H_

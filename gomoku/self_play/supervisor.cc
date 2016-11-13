@@ -1,4 +1,4 @@
-#include "gomoku/supervisor.h"
+#include "gomoku/self_play/supervisor.h"
 
 #include "gflags/gflags.h"
 #include "tensorflow/core/lib/io/path.h"

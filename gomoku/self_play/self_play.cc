@@ -1,6 +1,6 @@
 #include "gflags/gflags.h"
-#include "gomoku/supervisor.h"
-#include "gomoku/actor.h"
+#include "gomoku/core/actor.h"
+#include "gomoku/self_play/supervisor.h"
 
 DEFINE_string(replay_dir, "data/replays/", "Replay storage directory.");
 DEFINE_string(model_dir, "data/model/", "Model storage directory.");

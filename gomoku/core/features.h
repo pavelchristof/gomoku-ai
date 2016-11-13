@@ -1,10 +1,10 @@
-#ifndef GOMOKU_FEATURES_H
-#define GOMOKU_FEATURES_H
+#ifndef GOMOKU_CORE_FEATURES_H
+#define GOMOKU_CORE_FEATURES_H
 
 #include <map>
 #include <random>
 
-#include "gomoku/board.h"
+#include "gomoku/core/board.h"
 
 namespace gomoku {
 
@@ -37,4 +37,4 @@ Eigen::Vector2i SampleWeightMatrix(
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_FEATURES_H
+#endif  // GOMOKU_CORE_FEATURES_H

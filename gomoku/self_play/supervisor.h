@@ -1,13 +1,13 @@
-#ifndef GOMOKU_SUPERVISOR_H_
-#define GOMOKU_SUPERVISOR_H_
+#ifndef GOMOKU_SELF_PLAY_SUPERVISOR_H_
+#define GOMOKU_SELF_PLAY_SUPERVISOR_H_
 
 #include <future>
 #include <memory>
 #include <thread>
 
-#include "gomoku/board.h"
-#include "gomoku/actor.h"
-#include "gomoku/recording.pb.h"
+#include "gomoku/core/board.h"
+#include "gomoku/core/actor.h"
+#include "gomoku/core/recording.pb.h"
 #include "tensorflow/core/lib/io/record_writer.h"
 
 namespace gomoku {
@@ -46,4 +46,4 @@ class Supervisor {
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_SUPERVISOR_H_
+#endif  // GOMOKU_SELF_PLAY_SUPERVISOR_H_

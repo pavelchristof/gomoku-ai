@@ -1,4 +1,4 @@
-#include "gomoku/features.h"
+#include "gomoku/core/features.h"
 #include "tensorflow/core/platform/test.h"
 
 namespace gomoku {

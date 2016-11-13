@@ -1,6 +1,6 @@
 // Data structures used to store the board and make moves.
-#ifndef GOMOKU_BOARD_H_
-#define GOMOKU_BOARD_H_
+#ifndef GOMOKU_CORE_BOARD_H_
+#define GOMOKU_CORE_BOARD_H_
 
 #include <bitset>
 #include <utility>
@@ -119,4 +119,4 @@ class Board {
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_BOARD_H_
+#endif  // GOMOKU_CORE_BOARD_H_
