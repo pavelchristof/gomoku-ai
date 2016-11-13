@@ -43,6 +43,7 @@ class TimelineHook(tf.train.SessionRunHook):
       f.write(data)
     self._counter += 1
 
+
 def input():
   with tf.name_scope('input'):
     # Scan the available replay files and put them in a queue.
@@ -79,11 +80,36 @@ def input():
         name="rebatched_examples")
 
 
+def metrics(predicted_label, label):
+  accuracy = tf.contrib.metrics.accuracy(predicted_label, label)
+  exp_moving_average = tf.train.ExponentialMovingAverage(decay=0.99)
+  update_op = exp_moving_average.apply([accuracy])
+  tf.summary.scalar('accuracy', accuracy)
+  tf.summary.scalar('accuracy_moving_average',
+                    exp_moving_average.average(accuracy))
+  return update_op
+
+
 def model(features, scores):
   with tf.variable_scope('value') as value_scope:
+    # Run the value network.
     predicted_scores = networks.value(features)
-    tf.contrib.losses.sigmoid_cross_entropy(predicted_scores, scores)
+
+    # Compute the sigmoid loss, used for training.
+    sigmoid_loss = tf.contrib.losses.sigmoid_cross_entropy(
+        predicted_scores, scores)
+    tf.summary.scalar('sigmoid_loss', sigmoid_loss)
     total_loss = tf.contrib.losses.get_total_loss()
+
+    # Compute the mean_squared_loss for in-training evaluation.
+    mean_squared_loss = tf.contrib.losses.mean_squared_error(
+        tf.nn.sigmoid(predicted_scores), scores)
+    tf.summary.scalar('mean_squared_loss', mean_squared_loss)
+
+    # Compute the in-training metrics.
+    update_metrics_op = metrics(predicted_scores >= 0.0, scores >= 0.5)
+
+    # Use exponentially decaying learning rate.
     global_step = tf.contrib.framework.get_or_create_global_step()
     learning_rate = tf.train.exponential_decay(
         0.04,
@@ -92,12 +118,16 @@ def model(features, scores):
         decay_rate=0.94,
         staircase=True)
     tf.summary.scalar('learning_rate', learning_rate)
+
+    # Standard SGD for now.
     train_op = tf.contrib.layers.optimize_loss(
         loss=total_loss,
         global_step=global_step,
         learning_rate=learning_rate,
         optimizer='SGD')
-    return predicted_scores, total_loss, train_op
+
+    all_ops = tf.group(train_op, update_metrics_op)
+    return predicted_scores, total_loss, all_ops
 
 
 def main(_):
