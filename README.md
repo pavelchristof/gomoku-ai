@@ -41,9 +41,10 @@ The code is contained entirely in gomoku/, other directories belong to
 TensorFlow.
 
 gomoku/
-  core/ - game rules, actor interface, replay format, common utilities
-  networks/ - neural networks and training
-  self_play/ - self-play implementation
+
+  * core/ - game rules, actor interface, replay format, common utilities
+  * networks/ - neural networks and training
+  * self_play/ - self-play implementation
 
 Requirements
 ============
