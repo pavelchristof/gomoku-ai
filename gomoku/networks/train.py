@@ -80,8 +80,17 @@ def input():
         name="rebatched_examples")
 
 
-def metrics(predicted_label, label):
-  accuracy = tf.contrib.metrics.accuracy(predicted_label, label)
+def score_metrics(predicted_scores, scores):
+  """Computes metrics for scores (victory probability)."""
+  tf.summary.histogram('predicted_scores', predicted_scores)
+  mean_squared_loss = tf.contrib.losses.mean_squared_error(
+      predicted_scores, scores)
+  tf.summary.scalar('mean_squared_loss', mean_squared_loss)
+
+
+def binary_metrics(predicted_labels, labels):
+  """Computes metrics for binary labels."""
+  accuracy = tf.contrib.metrics.accuracy(predicted_labels, labels)
   exp_moving_average = tf.train.ExponentialMovingAverage(decay=0.99)
   update_op = exp_moving_average.apply([accuracy])
   tf.summary.scalar('accuracy', accuracy)
@@ -93,21 +102,18 @@ def metrics(predicted_label, label):
 def model(features, scores):
   with tf.variable_scope('value') as value_scope:
     # Run the value network.
-    predicted_scores = networks.value(features)
+    predicted_logits = networks.value(features)
+    predicted_scores = tf.nn.sigmoid(predicted_logits)
 
     # Compute the sigmoid loss, used for training.
     sigmoid_loss = tf.contrib.losses.sigmoid_cross_entropy(
-        predicted_scores, scores)
+        predicted_logits, scores)
     tf.summary.scalar('sigmoid_loss', sigmoid_loss)
     total_loss = tf.contrib.losses.get_total_loss()
 
-    # Compute the mean_squared_loss for in-training evaluation.
-    mean_squared_loss = tf.contrib.losses.mean_squared_error(
-        tf.nn.sigmoid(predicted_scores), scores)
-    tf.summary.scalar('mean_squared_loss', mean_squared_loss)
-
     # Compute the in-training metrics.
-    update_metrics_op = metrics(predicted_scores >= 0.0, scores >= 0.5)
+    score_metrics(predicted_scores, scores)
+    update_metrics_op = binary_metrics(predicted_logits >= 0.0, scores >= 0.5)
 
     # Use exponentially decaying learning rate.
     global_step = tf.contrib.framework.get_or_create_global_step()
