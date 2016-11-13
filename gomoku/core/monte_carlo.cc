@@ -47,7 +47,6 @@ Eigen::Vector2i McSoftmaxSamplingCell::ExploringMove(std::mt19937_64* rng)
       .cwiseProduct(LegalMoves());
   auto weights = matrix / matrix.sum();
   return SampleWeightMatrix(weights, rng);
-  return {};
 }
 
 }  // namespace gomoku

@@ -23,14 +23,15 @@ TEST(McSoftmaxSamplingCell, GreedyMove) {
 TEST(McSoftmaxSamplingCell, ExploringMove) {
   Board board;
   Board::Iter([&] (int x, int y) {
-    if (x % 2 == 0) board.ApplyMove({x, y});
+    if ((x + y) % 2 == 0) board.ApplyMove({x, y});
   });
 
   FeatureMatrix scores = FeatureMatrix::Zero();
   McSoftmaxSamplingCell cell(scores, board, 1.0f, 1.0f);
   std::mt19937_64 rng(42);
   for (int i = 0; i < 1000; ++i) {
-    ASSERT_EQ(1, cell.ExploringMove(&rng).x() % 2)
+    auto move = cell.ExploringMove(&rng);
+    ASSERT_EQ(1, (move.x() + move.y()) % 2)
         << "Scores(): " << cell.Scores() << "\n"
         << "LegalMoves(): " << cell.LegalMoves();
   }
