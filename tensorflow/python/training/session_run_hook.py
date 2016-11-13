@@ -152,7 +152,7 @@ class SessionRunHook(object):
 
 class SessionRunArgs(
     collections.namedtuple("SessionRunArgs",
-                           ["fetches", "feed_dict"])):
+                           ["fetches", "feed_dict", "should_trace"])):
   """Represents arguments to be added to a `Session.run()` call.
 
   Args:
@@ -166,10 +166,13 @@ class SessionRunArgs(
         fetches = {'step': global_step_tensor,
                    'ops': [train_op, check_nan_op]}
     feed_dict: Exactly like the `feed_dict` argument to `Session.Run()`
+    options: Exactly like the `options` argument to `Session.run()`, i.e., a
+      config_pb2.RunOptions proto.
   """
 
-  def __new__(cls, fetches, feed_dict=None):
-    return super(SessionRunArgs, cls).__new__(cls, fetches, feed_dict)
+  def __new__(cls, fetches, feed_dict=None, should_trace=False):
+    return super(SessionRunArgs, cls).__new__(
+        cls, fetches, feed_dict, should_trace)
 
 
 class SessionRunContext(object):
@@ -223,7 +226,8 @@ class SessionRunContext(object):
     self._stop_requested = True
 
 
-class SessionRunValues(collections.namedtuple("SessionRunValues", ["results"])):
+class SessionRunValues(collections.namedtuple("SessionRunValues",
+                                              ["results", "run_metadata"])):
   """Contains the results of `Session.run()`.
 
   In the future we may use this object to add more information about result of
@@ -240,3 +244,6 @@ class SessionRunValues(collections.namedtuple("SessionRunValues", ["results"])):
         fetches = {'step': global_step_tensor, 'summ': summary_op}
         => results = {'step': nparray(int), 'summ': nparray(string)}
   """
+
+  def __new__(cls, results, run_metadata=None):
+    return super(SessionRunValues, cls).__new__(cls, results, run_metadata)

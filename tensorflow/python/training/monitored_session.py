@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import abc
 
+from tensorflow.core.protobuf import config_pb2
 from tensorflow.core.protobuf import saver_pb2
 from tensorflow.python import summary
 from tensorflow.python.framework import errors
@@ -689,9 +690,16 @@ class _HookedSession(_WrappedSession):
     run_context = session_run_hook.SessionRunContext(
         original_args=session_run_hook.SessionRunArgs(fetches, feed_dict),
         session=self._sess)
-    feed_dict = self._call_hook_before_run(
+    feed_dict, should_trace = self._call_hook_before_run(
         run_context, actual_fetches, feed_dict)
-
+    if run_metadata is None:
+      run_metadata = config_pb2.RunMetadata()
+    # TODO: this is an ugly hack to collect traces. Hooks should be able to
+    # modify the options.
+    if should_trace:
+      if options is None:
+        options = config_pb2.RunOptions()
+      options.trace_level = config_pb2.RunOptions.FULL_TRACE
     # Do session run.
     outputs = _WrappedSession.run(self,
                                   fetches=actual_fetches,
@@ -703,7 +711,8 @@ class _HookedSession(_WrappedSession):
       hook.after_run(
           run_context,
           session_run_hook.SessionRunValues(results=outputs[hook] if
-                                            hook in outputs else None))
+                                            hook in outputs else None,
+                                            run_metadata=run_metadata))
     self._should_stop = self._should_stop or run_context.stop_requested
 
     return outputs['caller']
@@ -711,6 +720,7 @@ class _HookedSession(_WrappedSession):
   def _call_hook_before_run(self, run_context, fetch_dict, user_feed_dict):
     """Calls hooks.before_run and handles requests from hooks."""
     hook_feeds = {}
+    should_trace = False
     for hook in self._hooks:
       request = hook.before_run(run_context)
       if request is not None:
@@ -721,18 +731,20 @@ class _HookedSession(_WrappedSession):
               hook_feeds, request.feed_dict,
               'Same tensor is fed by two hooks.')
           hook_feeds.update(request.feed_dict)
+        if request.should_trace:
+          should_trace = True
 
     if not hook_feeds:
-      return user_feed_dict
+      return user_feed_dict, should_trace
 
     if not user_feed_dict:
-      return hook_feeds
+      return hook_feeds, should_trace
 
     self._raise_if_feeds_intersects(
         user_feed_dict, hook_feeds,
         'Same tensor is fed by a SessionRunHook and user.')
     hook_feeds.update(user_feed_dict)
-    return hook_feeds
+    return hook_feeds, should_trace
 
   def _raise_if_feeds_intersects(self, feeds1, feeds2, message):
     intersection = set(feeds1.keys()) & set(feeds2.keys())
