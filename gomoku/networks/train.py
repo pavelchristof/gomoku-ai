@@ -88,7 +88,7 @@ def model(features, scores):
     learning_rate = tf.train.exponential_decay(
         0.04,
         global_step=global_step,
-        decay_steps=300,
+        decay_steps=2000,
         decay_rate=0.94,
         staircase=True)
     tf.summary.scalar('learning_rate', learning_rate)
