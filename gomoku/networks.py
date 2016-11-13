@@ -34,9 +34,8 @@ def value(board):
     logits: A 1D tensor of the shape [batch] that contains the logits of the
       probability that the state leads to victory.
   """
-  net = layers.conv2d(board, 128, [9, 9], scope='conv9_1')
-  net = layers.conv2d(net, 64, [9, 9], scope='conv9_2')
-  net = layers.conv2d(net, 16, [9, 9], scope='conv9_3')
+  net = layers.conv2d(board, 64, [9, 9], scope='conv9_1')
+  net = layers.conv2d(net, 16, [9, 9], scope='conv9_2')
   net = layers.flatten(net)
   net = layers.fully_connected(net, 512)
   net = layers.dropout(net)
