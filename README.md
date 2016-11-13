@@ -8,9 +8,9 @@ Tree Search bootstrapped with policy and value neural networks trained with
 self-play, inspired by AlphaGo. It is written in a mix of C++ and Python, using
 TensorFlow. Simplicity is favored, but performance is not sacrificed.
 
-Gomoku is a more advanced variant of tic-tac-toe. The game is played on a 19x19
-board on which players put down stones in turns. The first player to get 5
-stones in a row (vertically, horizontally or diagonally) wins.
+Gomoku is a more advanced variant of tic-tac-toe. The players put down stones
+in turns on a 19x19 board. The first player to get 5 stones in a row (vertically,
+horizontally or diagonally) wins.
 
 The plan
 ========
@@ -22,7 +22,7 @@ The current status is:
     a convolutional value network.
   * GPU training is 20x faster then CPU on my machine.
   * The network quickly achieves 71% binary accuracy on random games, when
-    optimizing the mean square loss. 
+    optimizing the mean square loss.
 
 The TODO list is:
 
