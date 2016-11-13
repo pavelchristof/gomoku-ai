@@ -50,6 +50,15 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "monte_carlo_test",
+    srcs = ["monte_carlo_test.cc"],
+    deps = [
+        ":monte_carlo",
+        "//tensorflow/core:test",
+    ],
+)
+
 cc_library(
     name = "actor",
     hdrs = ["actor.h"],
