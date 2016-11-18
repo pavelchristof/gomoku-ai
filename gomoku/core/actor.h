@@ -3,9 +3,9 @@
 
 #include <atomic>
 #include <memory>
+#include <random>
 
 #include "gomoku/core/board.h"
-#include "gomoku/core/feature.h"
 
 namespace gomoku {
 
@@ -28,17 +28,9 @@ class Actor {
 
 class RandomActor : public Actor {
  public:
-  void GameStarted(Player me, int seed) override {
-    board_.Reset();
-    rng_.seed(seed);
-  }
-  void ObserveMove(Eigen::Vector2i move) override {
-    board_.ApplyMove(move);
-  }
-  Eigen::Vector2i ChooseMove(StopSignal) override {
-    auto playable_moves_ = StoneMatrix(board_, Player::NONE);
-    return SampleWeightMatrix(playable_moves_, &rng_);
-  }
+  void GameStarted(Player me, int seed) override;
+  void ObserveMove(Eigen::Vector2i move) override;
+  Eigen::Vector2i ChooseMove(StopSignal) override;
 
  private:
   Board board_;
