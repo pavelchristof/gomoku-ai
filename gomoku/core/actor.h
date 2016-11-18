@@ -51,6 +51,7 @@ class MonteCarloActor : public Actor {
       board.ApplyMove(exploring_move);
       Eigen::Vector2i move = exploring_move;
       while (!board.DidWin(move)) {
+        // TODO: this is a terribly inefficient way to sample a random move
         move = SampleWeightMatrix(StoneMatrix(board, Player::NONE), &rng_);
         board.ApplyMove(move);
       }

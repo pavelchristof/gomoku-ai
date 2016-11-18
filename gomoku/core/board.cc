@@ -10,7 +10,7 @@ bool Board::Inside(Eigen::Vector2i position) {
 }
 
 Player Board::StoneAt(Eigen::Vector2i position) const {
-  CHECK(Inside(position));
+  DCHECK(Inside(position));
   int index = (position.x() * kHeight + position.y()) * 2;
   if (fields_[index]) return Player::FIRST;
   if (fields_[index+1]) return Player::SECOND;
@@ -18,7 +18,7 @@ Player Board::StoneAt(Eigen::Vector2i position) const {
 }
 
 void Board::ApplyMove(Eigen::Vector2i move) {
-  CHECK(Inside(move));
+  DCHECK(Inside(move));
   int index = (move.x() * kHeight + move.y()) * 2;
   CHECK(!fields_[index]);
   CHECK(!fields_[index + 1]);
@@ -28,7 +28,7 @@ void Board::ApplyMove(Eigen::Vector2i move) {
 }
 
 void Board::RevertMove(Eigen::Vector2i move) {
-  CHECK(Inside(move));
+  DCHECK(Inside(move));
   int index = (move.x() * kHeight + move.y()) * 2;
   current_player_ = kOpponent[current_player_];
   CHECK(fields_[index + kPlayerOffset[current_player_]]);
@@ -47,7 +47,7 @@ bool Board::NoMovePossible() const {
 }
 
 bool Board::DidWin(Eigen::Vector2i last_move) const {
-  CHECK(Inside(last_move));
+  DCHECK(Inside(last_move));
 
   // There are one horizontal, one vertical and two diagonal lines where
   // the winning line of 5 stones could be located. We have to check all.
