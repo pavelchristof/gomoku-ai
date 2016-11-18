@@ -3,6 +3,7 @@
 #define GOMOKU_CORE_BOARD_H_
 
 #include <bitset>
+#include <random>
 #include <utility>
 
 #include <Eigen/Dense>
@@ -110,6 +111,9 @@ class Board {
 
   // Checks if the last move won the game.
   bool DidWin(Eigen::Vector2i last_move) const;
+
+  // Samples a random legal move with uniform distribution.
+  Eigen::Vector2i UniformlySampleLegalMove(std::mt19937_64* rng) const;
 
  private:
   std::bitset<kWidth * kHeight * 2> fields_;

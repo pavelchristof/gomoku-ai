@@ -17,8 +17,7 @@ class RandomActor : public Actor {
   }
 
   Eigen::Vector2i ChooseMove(StopSignal) override {
-    auto playable_moves_ = StoneMatrix(board_, Player::NONE);
-    return SampleWeightMatrix(playable_moves_, &rng_);
+    return board_.UniformlySampleLegalMove(&rng_);
   }
 
  private:

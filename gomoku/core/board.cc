@@ -75,4 +75,21 @@ bool Board::DidWin(Eigen::Vector2i last_move) const {
   return false;
 }
 
+Eigen::Vector2i Board::UniformlySampleLegalMove(std::mt19937_64* rng) const {
+  int legal_moves_count = kWidth * kHeight - moves_made_;
+  CHECK(legal_moves_count > 0);
+  std::uniform_int_distribution<int> move_index_dist(0, legal_moves_count-1);
+  int move_index = move_index_dist(*rng);
+  for (int x = 0; x < kWidth; ++x) {
+    for (int y = 0; y < kHeight; ++y) {
+      if (StoneAt({x, y}) == Player::NONE) {
+        if (move_index == 0)
+          return {x, y};
+        move_index -= 1;
+      }
+    }
+  }
+  LOG(FATAL) << "All legal moves exhausted";
+}
+
 }  // namespace gomoku
