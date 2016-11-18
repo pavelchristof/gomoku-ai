@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <memory>
-#include <random>
 
 #include "gomoku/core/board.h"
 
@@ -26,19 +25,11 @@ class Actor {
   virtual Eigen::Vector2i ChooseMove(StopSignal stop_signal) = 0;
 };
 
-class RandomActor : public Actor {
- public:
-  void GameStarted(Player me, int seed) override;
-  void ObserveMove(Eigen::Vector2i move) override;
-  Eigen::Vector2i ChooseMove(StopSignal) override;
-
- private:
-  Board board_;
-  std::mt19937_64 rng_;
-};
-
 // Factory used to create multiple copies of the same Actor.
 using ActorFactory = std::function<std::unique_ptr<Actor>()>;
+
+// Creates actors that always make random moves.
+ActorFactory RandomActorFactory();
 
 }  // namespace gomoku
 

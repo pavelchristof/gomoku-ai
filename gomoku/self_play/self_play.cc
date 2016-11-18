@@ -8,10 +8,8 @@ DEFINE_string(model_dir, "data/model/", "Model storage directory.");
 namespace gomoku {
 
 void SelfPlay() {
-  auto random_actor_factory = [] () {
-      return std::unique_ptr<RandomActor>(new RandomActor()); };
   PlayerMap<ActorFactory> actors = {
-      random_actor_factory, random_actor_factory};
+      RandomActorFactory(), RandomActorFactory()};
   Supervisor supervisor(actors, FLAGS_replay_dir);
   while (true) {
     for (int i = 0; i < 100; ++i)
