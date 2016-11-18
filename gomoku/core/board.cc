@@ -76,19 +76,20 @@ bool Board::DidWin(Eigen::Vector2i last_move) const {
 }
 
 Eigen::Vector2i Board::UniformlySampleLegalMove(std::mt19937_64* rng) const {
-  int legal_moves_count = kWidth * kHeight - moves_made_;
-  CHECK(legal_moves_count > 0);
-  std::uniform_int_distribution<int> move_index_dist(0, legal_moves_count-1);
-  int move_index = move_index_dist(*rng);
+  std::uniform_int_distribution<int> x_dist(0, kWidth-1);
+  std::uniform_int_distribution<int> y_dist(0, kHeight-1);
+  int x_offset = x_dist(*rng);
+  int y_offset = y_dist(*rng);
+
   for (int x = 0; x < kWidth; ++x) {
     for (int y = 0; y < kHeight; ++y) {
-      if (StoneAt({x, y}) == Player::NONE) {
-        if (move_index == 0)
-          return {x, y};
-        move_index -= 1;
+      Eigen::Vector2i move{(x + x_offset) % kWidth, (y + y_offset) % kHeight};
+      if (StoneAt(move) == Player::NONE) {
+        return move;
       }
     }
   }
+
   LOG(FATAL) << "All legal moves exhausted";
 }
 
