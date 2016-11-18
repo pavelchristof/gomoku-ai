@@ -66,6 +66,7 @@ cc_library(
     deps = [
         ":board",
         ":feature",
+        ":monte_carlo",
     ],
 )
 
