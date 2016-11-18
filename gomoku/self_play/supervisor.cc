@@ -4,7 +4,7 @@
 #include "tensorflow/core/lib/io/path.h"
 #include "tensorflow/core/lib/strings/stringprintf.h"
 
-DEFINE_uint64(micros_per_move, 1e5, "Microseconds allowed per move.");
+DEFINE_uint64(micros_per_move, 1e6, "Microseconds allowed per move.");
 DEFINE_int32(max_replay_files, 10, "Maximum number of log files.");
 
 namespace gomoku {
@@ -64,6 +64,11 @@ void Supervisor::RotateLog() {
   writer_.reset(new tensorflow::io::RecordWriter(file_.get(), options));
 }
 
+void Supervisor::PrintStats() {
+  LOG(INFO) << "player_1_won_: " << player_1_won_ << ", "
+            << "player_2_won_: " << player_2_won_;
+}
+
 namespace {
 
 StopSignal TimerFactory() {
@@ -96,7 +101,10 @@ void Supervisor::PlayBatch(int batch_size) {
 
   std::string record;
   for (auto& recording : recordings) {
-    CHECK(recording.get()->SerializeToString(&record));
+    auto data = std::move(recording.get());
+    player_1_won_ += data->score();
+    player_2_won_ += 1.0f - data->score();
+    CHECK(data->SerializeToString(&record));
     TF_CHECK_OK(writer_->WriteRecord(record));
   }
   TF_CHECK_OK(writer_->Flush());

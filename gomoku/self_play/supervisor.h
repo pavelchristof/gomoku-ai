@@ -24,12 +24,15 @@ class Supervisor {
  public:
   Supervisor(PlayerMap<ActorFactory> actor_factory,
              const std::string& replay_dir)
-    : actor_factory_(actor_factory), replay_dir_(replay_dir), next_log_(0) {
+    : actor_factory_(actor_factory), replay_dir_(replay_dir), next_log_(0),
+      player_1_won_(0.0f), player_2_won_(0.0f) {
     RotateLog();
   }
 
   // Finishes the replay log and rotates to a new one.
   void RotateLog();
+
+  void PrintStats();
 
   // Plays a batch of games in parallel saving their recordings.
   void PlayBatch(int batch_size);
@@ -42,6 +45,8 @@ class Supervisor {
   std::mt19937_64 rng_;
   std::uniform_int_distribution<int> gen_seed_;
   int next_log_;
+  float player_1_won_;
+  float player_2_won_;
 };
 
 }  // namespace gomoku

@@ -9,11 +9,14 @@ namespace gomoku {
 
 void SelfPlay() {
   PlayerMap<ActorFactory> actors = {
-      RandomActorFactory(), RandomActorFactory()};
+      MonteCarloActorFactory<McLinearCell>(),
+      MonteCarloActorFactory<McLogisticCell>()};
   Supervisor supervisor(actors, FLAGS_replay_dir);
   while (true) {
-    for (int i = 0; i < 100; ++i)
-      supervisor.PlayBatch(1000);
+    for (int i = 0; i < 100; i++) {
+      supervisor.PlayBatch(8);
+      supervisor.PrintStats();
+    }
     supervisor.RotateLog();
   }
 }
