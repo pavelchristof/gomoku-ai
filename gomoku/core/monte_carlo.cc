@@ -2,49 +2,40 @@
 
 namespace gomoku {
 
-McRandomCell::McRandomCell(FeatureMatrix legal_moves)
-  : legal_moves_(std::move(legal_moves)) {}
+McLinearCell::McLinearCell(FeatureMatrix win_prob, float learning_rate)
+    : win_prob_(win_prob), learning_rate_(learning_rate) {}
 
-Eigen::Vector2i McRandomCell::GreedyMove(std::mt19937_64* rng) const {
-  return SampleWeightMatrix(legal_moves_, rng);
-}
-
-Eigen::Vector2i McRandomCell::ExploringMove(std::mt19937_64* rng) const {
-  return SampleWeightMatrix(legal_moves_, rng);
-}
-
-McSamplingCell::McSamplingCell(
-    FeatureMatrix scores,
-    FeatureMatrix legal_moves,
-    float learning_rate)
-  : scores_(std::move(scores)),
-    legal_moves_(std::move(legal_moves)),
-    learning_rate_(learning_rate) {}
-
-Eigen::Vector2i McSamplingCell::GreedyMove(std::mt19937_64*) const {
-  int x, y;
-  Scores().cwiseProduct(LegalMoves()).maxCoeff(&x, &y);
-  return {x, y};
-}
-
-void McSamplingCell::Update(Eigen::Vector2i move, float score) {
-  auto& value = scores_(move.x(), move.y());
+void McLinearCell::Update(Eigen::Vector2i move, float score) {
+  auto& value = win_prob_(move.x(), move.y());
   value = value + learning_rate_ * (score - value);
 }
 
-McSoftmaxSamplingCell::McSoftmaxSamplingCell(
-    FeatureMatrix scores,
-    FeatureMatrix legal_moves,
-    float learning_rate,
-    float temperature)
-  : McSamplingCell(std::move(scores), std::move(legal_moves), learning_rate),
-    temperature_(temperature) {}
+McLogisticCell::McLogisticCell(FeatureMatrix win_prob, float learning_rate)
+    : win_prob_(win_prob), learning_rate_(learning_rate) {}
 
-Eigen::Vector2i McSoftmaxSamplingCell::ExploringMove(std::mt19937_64* rng)
-    const {
-  FeatureMatrix matrix = (Scores() / temperature_)
+void McLogisticCell::Update(Eigen::Vector2i move, float score) {
+  auto& value = win_prob_(move.x(), move.y());
+  float gradient = score * (1.0f / value) -
+      (1.0f - score) * (1.0f / (1.0 - value));
+  value = value + learning_rate_ * gradient;
+}
+
+// Picks the best possible legal move.
+Eigen::Vector2i SampleGreedy(const FeatureMatrix& win_prob,
+                             const FeatureMatrix& legal_moves) {
+  int x, y;
+  win_prob.cwiseProduct(legal_moves).maxCoeff(&x, &y);
+  return {x, y};
+}
+
+// Picks a move using the softmax distribution.
+Eigen::Vector2i SampleSoftmax(const FeatureMatrix& win_prob,
+                              const FeatureMatrix& legal_moves,
+                              float temperature,
+                              std::mt19937_64* rng) {
+  FeatureMatrix matrix = (win_prob / temperature)
       .array().exp().matrix()
-      .cwiseProduct(LegalMoves());
+      .cwiseProduct(legal_moves);
   auto weights = matrix / matrix.sum();
   return SampleWeightMatrix(weights, rng);
 }
