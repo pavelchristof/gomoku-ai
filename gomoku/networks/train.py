@@ -109,7 +109,7 @@ def model(features, scores):
     mean_squared_loss = tf.contrib.losses.mean_squared_error(
         predicted_scores, scores)
     tf.summary.scalar('mean_squared_loss', mean_squared_loss)
-    loss = mean_squared_loss
+    loss = sigmoid_loss
 
     # Compute the in-training metrics.
     mean_squared_loss = score_metrics(predicted_scores, scores)
