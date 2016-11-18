@@ -21,9 +21,7 @@ The current status is:
   * The training pipeline reads these file, constructs features and trains
     a convolutional value network.
   * GPU training is 20x faster then CPU on my machine.
-  * The network quickly achieves 71% binary accuracy on random games, when
-    optimizing the mean square loss. Mean square loss gives more conservative
-    predictions, approximating the expected value of a position.
+  * The network quickly achieves 88% binary accuracy on random games.
 
 The TODO list is:
 
