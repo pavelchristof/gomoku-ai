@@ -87,11 +87,11 @@ void Supervisor::PlayBatch(int batch_size) {
   std::vector<std::future<std::unique_ptr<Recording>>> recordings;
   for (int i = 0; i < batch_size; ++i) {
     recordings.push_back(std::async(std::launch::async, [&] () {
-      auto actors = actor_factory_.map([] (const ActorFactory& factory) {
-          return factory();
+      auto actors = actor_specs_.Map([] (const ActorSpec& spec) {
+        return ActorRegistry::Global()->Create(spec.name(), spec.config());
       });
       return PlayGame(
-          actors.map([] (const std::unique_ptr<Actor>& actor) {
+          actors.Map([] (const std::unique_ptr<Actor>& actor) {
             return actor.get();
           }),
           {TimerFactory, TimerFactory},

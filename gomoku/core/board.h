@@ -27,6 +27,13 @@ struct PlayerMap {
   T first;
   T second;
 
+  T& operator[] (Player player) {
+    if (player == Player::FIRST) return first;
+    if (player == Player::SECOND) return second;
+    LOG(FATAL) << "PlayerMap[Player::NONE] called";
+    __builtin_unreachable();
+  }
+
   const T& operator[] (Player player) const {
     if (player == Player::FIRST) return first;
     if (player == Player::SECOND) return second;
@@ -35,12 +42,12 @@ struct PlayerMap {
   }
 
   template <typename F>
-  auto map(F&& fn) -> PlayerMap<decltype(fn(first))> {
+  auto Map(F&& fn) -> PlayerMap<decltype(fn(first))> {
     return {fn(first), fn(second)};
   }
 
   template <typename F>
-  auto imap(F&& fn) -> PlayerMap<decltype(fn(Player::FIRST, first))> {
+  auto IndexMap(F&& fn) -> PlayerMap<decltype(fn(Player::FIRST, first))> {
     return {fn(Player::FIRST, first), fn(Player::SECOND, second)};
   }
 };

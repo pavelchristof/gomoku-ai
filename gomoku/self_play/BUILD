@@ -5,6 +5,7 @@ cc_library(
     hdrs = ["supervisor.h"],
     srcs = ["supervisor.cc"],
     deps = [
+        "//gomoku/actors:actor_registry",
         "//gomoku/core:actor",
         "//gomoku/core:recording_proto_cc",
         "//tensorflow/core:lib",
@@ -17,6 +18,9 @@ cc_binary(
     srcs = ["self_play.cc"],
     deps = [
         ":supervisor",
+        "//gomoku/actors:actor_spec_proto_cc",
+        "//gomoku/actors:all_actors",
         "//gomoku/core:actor",
-    ]
+    ],
+    linkstatic = True,
 )

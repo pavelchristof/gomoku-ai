@@ -5,6 +5,7 @@
 #include <memory>
 #include <thread>
 
+#include "gomoku/actors/actor_registry.h"
 #include "gomoku/core/board.h"
 #include "gomoku/core/actor.h"
 #include "gomoku/core/recording.pb.h"
@@ -22,9 +23,9 @@ std::unique_ptr<Recording> PlayGame(
 
 class Supervisor {
  public:
-  Supervisor(PlayerMap<ActorFactory> actor_factory,
+  Supervisor(PlayerMap<ActorSpec> actor_specs,
              const std::string& replay_dir)
-    : actor_factory_(actor_factory), replay_dir_(replay_dir), next_log_(0),
+    : actor_specs_(actor_specs), replay_dir_(replay_dir), next_log_(0),
       player_1_won_(0.0f), player_2_won_(0.0f) {
     RotateLog();
   }
@@ -40,7 +41,7 @@ class Supervisor {
  private:
   std::unique_ptr<tensorflow::WritableFile> file_;
   std::unique_ptr<tensorflow::io::RecordWriter> writer_;
-  PlayerMap<ActorFactory> actor_factory_;
+  PlayerMap<ActorSpec> actor_specs_;
   std::string replay_dir_;
   std::mt19937_64 rng_;
   std::uniform_int_distribution<int> gen_seed_;

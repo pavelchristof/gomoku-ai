@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package gomoku;
+
+message ActorConfig {
+  message Item {
+    string key = 1;
+    // Exactly one of these fields should be set.
+    string string = 2;
+    float floating = 3;
+    int32 integer = 4;
+  }
+  // Key-value pairs.
+  repeated Item item = 1;
+}
+
+message ActorSpec {
+  // Name of the actor.
+  string name = 1;
+  // Configuration. Depends on the actor.
+  ActorConfig config = 2;
+}

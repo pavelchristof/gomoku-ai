@@ -1,6 +1,6 @@
 load("//tensorflow/core:platform/default/build_config.bzl", "tf_proto_library")
 
-package(default_visibility = ["//gomoku"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "board",

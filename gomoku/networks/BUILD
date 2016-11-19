@@ -56,5 +56,5 @@ py_binary(
         ":networks",
         ":replay_ops",
         "//tensorflow:tensorflow_py",
-    ]
+    ],
 )
