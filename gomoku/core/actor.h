@@ -43,7 +43,7 @@ class MonteCarloActor : public Actor {
   }
 
   Eigen::Vector2i ChooseMove(StopSignal stop_signal) override {
-    Cell cell{FeatureMatrix::Constant(0.5f), 1e-5f};
+    Cell cell{FeatureMatrix::Constant(0.5f), 1e-3f};
     while (!stop_signal()) {
       Board board = board_;
       const Eigen::Vector2i exploring_move = SampleSoftmax(
