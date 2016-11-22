@@ -48,7 +48,6 @@ from __future__ import print_function
 
 import six
 
-from tensorflow.python.framework import common_shapes
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor
@@ -123,20 +122,3 @@ ops.NotDifferentiable("StringSplit")
 ops.NotDifferentiable("AsString")
 ops.NotDifferentiable("EncodeBase64")
 ops.NotDifferentiable("DecodeBase64")
-
-ops.RegisterShape("StringToHashBucket")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("StringToHashBucketFast")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("StringToHashBucketStrong")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("AsString")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("EncodeBase64")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("DecodeBase64")(common_shapes.call_cpp_shape_fn)
-
-
-@ops.RegisterShape("ReduceJoin")
-def _ReduceJoinShape(op):
-  return common_shapes.call_cpp_shape_fn(op, input_tensors_needed=[1])
-
-
-ops.RegisterShape("StringJoin")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("StringSplit")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("Substr")(common_shapes.call_cpp_shape_fn)

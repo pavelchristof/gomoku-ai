@@ -90,7 +90,8 @@ class ScatterNdTest(tf.test.TestCase):
     np.random.seed(8)
     ref_shapes = [(3, 6), (3, 6), (3, 6, 9), (3, 6, 9), (3, 6, 9), (3, 6, 9)]
     indices_shapes = [(2,), (2, 2), (2,), (2, 2), (2, 3), (2, 3, 3)]
-    with self.test_session(use_gpu=use_gpu):
+    # TODO(apassos): re-enable when GPU support is working again.
+    with self.test_session(use_gpu=False):
       for ref_shape, indices_shape in zip(ref_shapes, indices_shapes):
         num_updates = indices_shape[0]
         ixdim = indices_shape[-1]
@@ -127,6 +128,7 @@ class ScatterNdTest(tf.test.TestCase):
         ref_var = tf.Variable(ref)
         ref_var.initializer.run()
         tf_scatter(ref_var, indices, updates).eval()
+
         # Compare
         self.assertAllClose(new, ref_var.eval())
 
@@ -243,7 +245,7 @@ class ScatterNdTest(tf.test.TestCase):
     shape = tf.placeholder(tf.int32, shape=[None])
     tf.scatter_nd(indices, updates, shape)
 
-  def testEmptyoutputShape1(self):
+  def testEmptyOutputShape1(self):
     indices = tf.zeros([2, 2, 2], tf.int32)
     updates = tf.zeros([2, 2, 2], tf.int32)
     shape = tf.constant([0, 3, 2], tf.int32)
@@ -252,7 +254,7 @@ class ScatterNdTest(tf.test.TestCase):
         ValueError, "Indices and updates specified for empty output shape"):
       tf.scatter_nd(indices, updates, shape)
 
-  def testEmptyoutputShape2(self):
+  def testEmptyOutputShape2(self):
     indices = tf.placeholder(tf.int32, shape=None)
     updates = tf.placeholder(tf.int32, shape=None)
     shape = tf.constant([0, 3, 2], tf.int32)
@@ -265,7 +267,7 @@ class ScatterNdTest(tf.test.TestCase):
               [2, 2, 2], dtype=np.int32)
       })
 
-  def testEmptyoutputShape3(self):
+  def testEmptyOutputShape3(self):
     indices = tf.zeros([0], tf.int32)
     updates = tf.zeros([0], tf.int32)
     shape = tf.constant([0], tf.int32)

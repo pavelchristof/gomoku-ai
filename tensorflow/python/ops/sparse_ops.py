@@ -59,7 +59,6 @@ from __future__ import print_function
 
 import numpy as np
 
-from tensorflow.python.framework import common_shapes
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor
@@ -305,9 +304,6 @@ def sparse_add(a, b, thresh=0):
                                                    b)
 
 
-ops.RegisterShape("SparseAdd")(common_shapes.call_cpp_shape_fn)
-
-
 def sparse_dense_cwise_add(sp_t, dense_t):
   """Adds up a SparseTensor and a dense Tensor, using these special rules:
 
@@ -331,11 +327,6 @@ def sparse_dense_cwise_add(sp_t, dense_t):
   result = gen_sparse_ops.sparse_dense_cwise_add(sp_t.indices, sp_t.values,
                                                  sp_t.shape, dense_t)
   return sparse_tensor.SparseTensor(sp_t.indices, result, sp_t.shape)
-
-
-ops.RegisterShape("SparseTensorDenseAdd")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("SparseAddGrad")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("SparseConcat")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_reorder(sp_input, name=None):
@@ -380,9 +371,6 @@ def sparse_reorder(sp_input, name=None):
 
   return sparse_tensor.SparseTensor(reordered_ind, reordered_val,
                                     array_ops.identity(sp_input.shape))
-
-
-ops.RegisterShape("SparseReorder")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_reshape(sp_input, shape, name=None):
@@ -441,9 +429,6 @@ def sparse_reshape(sp_input, shape, name=None):
         reshaped_shape)
 
 
-ops.RegisterShape("SparseReshape")(common_shapes.call_cpp_shape_fn)
-
-
 def sparse_split(split_dim, num_split, sp_input, name=None):
   """Split a `SparseTensor` into `num_split` tensors along `split_dim`.
 
@@ -493,14 +478,6 @@ def sparse_split(split_dim, num_split, sp_input, name=None):
         sparse_tensor.SparseTensor(
             output_inds[i], output_vals[i], output_shapes[i]))
   return sparse_tensors
-
-
-ops.RegisterShape("SparseSplit")(common_shapes.call_cpp_shape_fn)
-
-
-@ops.RegisterShape("SparseToDense")
-def _SparseToDenseShape(op):
-  return common_shapes.call_cpp_shape_fn(op, input_tensors_needed=[1])
 
 
 def sparse_to_dense(sparse_indices,
@@ -558,7 +535,8 @@ def sparse_to_dense(sparse_indices,
       name=name)
 
 
-def sparse_reduce_sum(sp_input, reduction_axes=None, keep_dims=False):
+def sparse_reduce_sum(sp_input, axis=None, keep_dims=False,
+                      reduction_axes=None):
   """Computes the sum of elements across dimensions of a SparseTensor.
 
   This Op takes a SparseTensor and is the sparse counterpart to
@@ -589,23 +567,22 @@ def sparse_reduce_sum(sp_input, reduction_axes=None, keep_dims=False):
 
   Args:
     sp_input: The SparseTensor to reduce. Should have numeric type.
-    reduction_axes: The dimensions to reduce; list or scalar. If `None` (the
+    axis: The dimensions to reduce; list or scalar. If `None` (the
       default), reduces all dimensions.
     keep_dims: If true, retain reduced dimensions with length 1.
+    reduction_axes: Deprecated name of axis.
 
   Returns:
     The reduced Tensor.
   """
   return gen_sparse_ops.sparse_reduce_sum(
       sp_input.indices, sp_input.values,
-      sp_input.shape, math_ops._ReductionDims(sp_input, reduction_axes),
+      sp_input.shape, math_ops._ReductionDims(sp_input, axis, reduction_axes),
       keep_dims)
 
 
-ops.RegisterShape("SparseReduceSum")(common_shapes.call_cpp_shape_fn)
-
-
-def sparse_reduce_sum_sparse(sp_input, reduction_axes=None, keep_dims=False):
+def sparse_reduce_sum_sparse(sp_input, axis=None, keep_dims=False,
+                             reduction_axes=None):
   """Computes the sum of elements across dimensions of a SparseTensor.
 
   This Op takes a SparseTensor and is the sparse counterpart to
@@ -623,9 +600,10 @@ def sparse_reduce_sum_sparse(sp_input, reduction_axes=None, keep_dims=False):
 
   Args:
     sp_input: The SparseTensor to reduce. Should have numeric type.
-    reduction_axes: The dimensions to reduce; list or scalar. If `None` (the
+    axis: The dimensions to reduce; list or scalar. If `None` (the
       default), reduces all dimensions.
     keep_dims: If true, retain reduced dimensions with length 1.
+    reduction_axes: Deprecated name of axis
 
   Returns:
     The reduced SparseTensor.
@@ -633,13 +611,11 @@ def sparse_reduce_sum_sparse(sp_input, reduction_axes=None, keep_dims=False):
   output_ind, output_val, output_shape = (
       gen_sparse_ops.sparse_reduce_sum_sparse(
           sp_input.indices, sp_input.values,
-          sp_input.shape, math_ops._ReductionDims(sp_input, reduction_axes),
+          sp_input.shape, math_ops._ReductionDims(sp_input, axis,
+                                                  reduction_axes),
           keep_dims))
 
   return sparse_tensor.SparseTensor(output_ind, output_val, output_shape)
-
-
-ops.RegisterShape("SparseReduceSumSparse")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_tensor_to_dense(sp_input,
@@ -1086,9 +1062,6 @@ def serialize_sparse(sp_input, name=None):
       sp_input.indices, sp_input.values, sp_input.shape, name=name)
 
 
-ops.RegisterShape("SerializeSparse")(common_shapes.call_cpp_shape_fn)
-
-
 def serialize_many_sparse(sp_input, name=None):
   """Serialize an `N`-minibatch `SparseTensor` into an `[N, 3]` string `Tensor`.
 
@@ -1116,9 +1089,6 @@ def serialize_many_sparse(sp_input, name=None):
 
   return gen_sparse_ops._serialize_many_sparse(
       sp_input.indices, sp_input.values, sp_input.shape, name=name)
-
-
-ops.RegisterShape("SerializeManySparse")(common_shapes.call_cpp_shape_fn)
 
 
 def deserialize_many_sparse(serialized_sparse, dtype, rank=None, name=None):
@@ -1188,9 +1158,6 @@ def deserialize_many_sparse(serialized_sparse, dtype, rank=None, name=None):
   output_shape.set_shape([rank])
 
   return sparse_tensor.SparseTensor(output_indices, output_values, output_shape)
-
-
-ops.RegisterShape("DeserializeManySparse")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_tensor_dense_matmul(sp_a,
@@ -1372,12 +1339,6 @@ def sparse_tensor_dense_matmul(sp_a,
         adjoint_b=adjoint_b)
 
 
-@ops.RegisterShape("SparseTensorDenseMatMul")
-def _SparseTensorDenseMatMulShape(op):  # pylint: disable=invalid-name
-  # Pass the shape tensor as needed to access it as a constant value
-  return common_shapes.call_cpp_shape_fn(op, input_tensors_needed=[2])
-
-
 def sparse_softmax(sp_input, name=None):
   """Applies softmax to a batched N-D `SparseTensor`.
 
@@ -1430,9 +1391,6 @@ def sparse_softmax(sp_input, name=None):
                                              sp_input.shape)
     return sparse_tensor.SparseTensor(
         sp_input.indices, out_vals, sp_input.shape)
-
-
-ops.RegisterShape("SparseSoftmax")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_maximum(sp_a, sp_b, name=None):
@@ -1505,10 +1463,6 @@ def sparse_minimum(sp_a, sp_b, name=None):
         sp_b.shape,
         name=name)
   return sparse_tensor.SparseTensor(out_indices, out_values, sp_a.shape)
-
-
-ops.RegisterShape("SparseSparseMaximum")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("SparseSparseMinimum")(common_shapes.call_cpp_shape_fn)
 
 
 def sparse_transpose(sp_input, perm=None, name=None):
@@ -1685,7 +1639,8 @@ def _take_many_sparse_from_tensors_map(
   if sparse_map_op.type not in ("AddSparseToTensorsMap",
                                 "AddManySparseToTensorsMap"):
     raise TypeError("sparse_map_op must be one of AddSparseToTensorsMap or "
-                    "AddSparseToTensorsMap")
+                    "AddSparseToTensorsMap. Instead, found `%s`." %
+                    sparse_map_op.type)
   with ops.colocate_with(sparse_map_op):
     shared_name = sparse_map_op.get_attr("shared_name") or sparse_map_op.name
     output_indices, output_values, output_shape = (
@@ -1699,9 +1654,3 @@ def _take_many_sparse_from_tensors_map(
   output_shape.set_shape([rank])
 
   return sparse_tensor.SparseTensor(output_indices, output_values, output_shape)
-
-
-ops.RegisterShape("AddSparseToTensorsMap")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("AddManySparseToTensorsMap")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("TakeManySparseFromTensorsMap")(
-    common_shapes.call_cpp_shape_fn)

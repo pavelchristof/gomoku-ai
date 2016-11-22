@@ -273,7 +273,7 @@ py_test(
 
 py_test(
     name = "experiment_test",
-    size = "small",
+    size = "medium",
     srcs = ["python/learn/experiment_test.py"],
     srcs_version = "PY2AND3",
     deps = [
@@ -384,7 +384,7 @@ py_test(
 
 py_test(
     name = "dnn_linear_combined_test",
-    size = "medium",
+    size = "large",
     srcs = ["python/learn/estimators/dnn_linear_combined_test.py"],
     shard_count = 4,
     srcs_version = "PY2AND3",
@@ -413,6 +413,26 @@ py_test(
     srcs = ["python/learn/estimators/dnn_test.py"],
     shard_count = 4,
     srcs_version = "PY2AND3",
+    tags = [
+        "manual",
+        "notap",  # TODO(b/31934515,b/32718315)
+    ],
+    deps = [
+        ":learn",
+        "//tensorflow:tensorflow_py",
+        "//tensorflow/python:framework_test_lib",
+    ],
+)
+
+py_test(
+    name = "dnn_linear_combined_benchmark_test",
+    size = "medium",
+    srcs = ["python/learn/estimators/dnn_linear_combined_benchmark_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = [
+        "//learning/brain/google/guitar:__subpackages__",
+        "//tensorflow:__subpackages__",
+    ],
     deps = [
         ":learn",
         "//tensorflow:tensorflow_py",
@@ -610,6 +630,18 @@ py_test(
         ":learn",
         "//tensorflow:tensorflow_py",
         "//tensorflow/python:framework",
+        "//tensorflow/python:framework_test_lib",
+    ],
+)
+
+py_test(
+    name = "pandas_io_test",
+    size = "small",
+    srcs = ["python/learn/learn_io/pandas_io_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":learn",
+        "//tensorflow:tensorflow_py",
         "//tensorflow/python:framework_test_lib",
     ],
 )

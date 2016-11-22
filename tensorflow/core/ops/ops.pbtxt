@@ -6591,7 +6591,7 @@ op {
   attr {
     name: "rates"
     type: "list(int)"
-    description: "1-D of length 4. Must be: `[1, rate_rows, rate_cols, 1]`. This is the\ninput stride, specifying how far two consecutive patch samples are in the\ninput. Equivalent to extracting patches with\n`patch_sizes_eff = patch_sizes + (patch_sizes - 1) * (rates - 1), followed by\nsubsampling them spatially by a factor of `rates`."
+    description: "1-D of length 4. Must be: `[1, rate_rows, rate_cols, 1]`. This is the\ninput stride, specifying how far two consecutive patch samples are in the\ninput. Equivalent to extracting patches with\n`patch_sizes_eff = patch_sizes + (patch_sizes - 1) * (rates - 1)`, followed by\nsubsampling them spatially by a factor of `rates`."
     has_minimum: true
     minimum: 4
   }
@@ -6649,7 +6649,7 @@ op {
   }
   output_arg {
     name: "output"
-    description: "A complex64 tensor of the same shape as `input`. The inner-most 2\ndimensions of `input` are replaced with their 2D Fourier Transform."
+    description: "A complex64 tensor of the same shape as `input`. The inner-most 2\n  dimensions of `input` are replaced with their 2D Fourier Transform.\n\n@compatibility(numpy)\nEquivalent to np.fft2\n@end_compatibility"
     type: DT_COMPLEX64
   }
   summary: "Compute the 2-dimensional discrete Fourier Transform over the inner-most"
@@ -6664,7 +6664,7 @@ op {
   }
   output_arg {
     name: "output"
-    description: "A complex64 tensor of the same shape as `input`. The inner-most 3\ndimensions of `input` are replaced with their 3D Fourier Transform."
+    description: "A complex64 tensor of the same shape as `input`. The inner-most 3\n  dimensions of `input` are replaced with their 3D Fourier Transform.\n\n@compatibility(numpy)\nEquivalent to np.fft3\n@end_compatibility"
     type: DT_COMPLEX64
   }
   summary: "Compute the 3-dimensional discrete Fourier Transform over the inner-most 3"
@@ -6915,7 +6915,7 @@ op {
   }
   input_arg {
     name: "value"
-    description: "0-D (scalar). Value to fill the returned tensor."
+    description: "0-D (scalar). Value to fill the returned tensor.\n\n@compatibility(numpy)\nEquivalent to np.full\n@end_compatibility"
     type_attr: "T"
   }
   output_arg {
@@ -8107,7 +8107,7 @@ op {
   }
   output_arg {
     name: "output"
-    description: "A complex64 tensor of the same shape as `input`. The inner-most 2\ndimensions of `input` are replaced with their inverse 2D Fourier Transform."
+    description: "A complex64 tensor of the same shape as `input`. The inner-most 2\n  dimensions of `input` are replaced with their inverse 2D Fourier Transform.\n\n@compatibility(numpy)\nEquivalent to np.ifft2\n@end_compatibility"
     type: DT_COMPLEX64
   }
   summary: "Compute the inverse 2-dimensional discrete Fourier Transform over the inner-most"
@@ -8122,7 +8122,7 @@ op {
   }
   output_arg {
     name: "output"
-    description: "A complex64 tensor of the same shape as `input`. The inner-most 3\ndimensions of `input` are replaced with their inverse 3D Fourier Transform."
+    description: "A complex64 tensor of the same shape as `input`. The inner-most 3\n  dimensions of `input` are replaced with their inverse 3D Fourier Transform.\n\n@compatibility(numpy)\nEquivalent to np.fft3\n@end_compatibility"
     type: DT_COMPLEX64
   }
   summary: "Compute the inverse 3-dimensional discrete Fourier Transform over the inner-most"
@@ -8493,6 +8493,10 @@ op {
   }
   summary: "Computes the reciprocal of x element-wise."
   description: "I.e., \\\\(y = 1 / x\\\\)."
+  deprecation {
+    version: 17
+    explanation: "Use Reciprocal"
+  }
 }
 op {
   name: "InvGrad"
@@ -8523,6 +8527,10 @@ op {
   }
   summary: "Computes the gradient for the inverse of `x` wrt its input."
   description: "Specifically, `grad = -dy * y*y`, where `y = 1/x`, and `dy`\nis the corresponding input gradient."
+  deprecation {
+    version: 17
+    explanation: "Use ReciprocalGrad"
+  }
 }
 op {
   name: "InvertPermutation"
@@ -8574,6 +8582,7 @@ op {
     }
   }
   summary: "Returns which elements of x are finite."
+  description: "@compatibility(numpy)\nEquivalent to np.isfinite\n@end_compatibility"
 }
 op {
   name: "IsInf"
@@ -8597,6 +8606,7 @@ op {
     }
   }
   summary: "Returns which elements of x are Inf."
+  description: "@compatibility(numpy)\nEquivalent to np.isinf\n@end_compatibility"
 }
 op {
   name: "IsNan"
@@ -8620,6 +8630,7 @@ op {
     }
   }
   summary: "Returns which elements of x are NaN."
+  description: "@compatibility(numpy)\nEquivalent to np.isnan\n@end_compatibility"
 }
 op {
   name: "IsVariableInitialized"
@@ -9560,7 +9571,7 @@ op {
   }
   output_arg {
     name: "output"
-    description: "Shape is `[..., M, M]`."
+    description: "Shape is `[..., M, M]`.\n\n@compatibility(numpy)\nEquivalent to np.linalg.inv\n@end_compatibility"
     type_attr: "T"
   }
   attr {
@@ -9661,7 +9672,7 @@ op {
   }
   input_arg {
     name: "l2_regularizer"
-    description: "Scalar tensor."
+    description: "Scalar tensor.\n\n@compatibility(numpy)\nEquivalent to np.linalg.lstsq\n@end_compatibility"
     type: DT_DOUBLE
   }
   output_arg {
@@ -9720,7 +9731,7 @@ op {
     default_value {
       b: false
     }
-    description: "Boolean indicating whether to solve with `matrix` or its (block-wise)\nadjoint."
+    description: "Boolean indicating whether to solve with `matrix` or its (block-wise)\n         adjoint.\n\n@compatibility(numpy)\nEquivalent to np.linalg.triangular_solve\n@end_compatibility"
   }
   attr {
     name: "T"
@@ -14958,6 +14969,29 @@ op {
   description: "Given a `tensor`, and a `int32` tensor `axis` representing the set of\ndimensions of `tensor` to reverse. This operation reverses each dimension\n`i` for which there exists `j` s.t. `axis[j] == i`.\n\n`tensor` can have up to 8 dimensions. The number of dimensions specified\nin `axis` may be 0 or more entries. If an index is specified more than\nonce, a InvalidArgument error is raised.\n\nFor example:\n\n```prettyprint\n# tensor \'t\' is [[[[ 0,  1,  2,  3],\n#                  [ 4,  5,  6,  7],\n#                  [ 8,  9, 10, 11]],\n#                 [[12, 13, 14, 15],\n#                  [16, 17, 18, 19],\n#                  [20, 21, 22, 23]]]]\n# tensor \'t\' shape is [1, 2, 3, 4]\n\n# \'dims\' is [3] or \'dims\' is -1\nreverse(t, dims) ==> [[[[ 3,  2,  1,  0],\n                        [ 7,  6,  5,  4],\n                        [ 11, 10, 9, 8]],\n                       [[15, 14, 13, 12],\n                        [19, 18, 17, 16],\n                        [23, 22, 21, 20]]]]\n\n# \'dims\' is \'[1]\' (or \'dims\' is \'[-3]\')\nreverse(t, dims) ==> [[[[12, 13, 14, 15],\n                        [16, 17, 18, 19],\n                        [20, 21, 22, 23]\n                       [[ 0,  1,  2,  3],\n                        [ 4,  5,  6,  7],\n                        [ 8,  9, 10, 11]]]]\n\n# \'dims\' is \'[2]\' (or \'dims\' is \'[-2]\')\nreverse(t, dims) ==> [[[[8, 9, 10, 11],\n                        [4, 5, 6, 7],\n                        [0, 1, 2, 3]]\n                       [[20, 21, 22, 23],\n                        [16, 17, 18, 19],\n                        [12, 13, 14, 15]]]]\n```"
 }
 op {
+  name: "Rint"
+  input_arg {
+    name: "x"
+    type_attr: "T"
+  }
+  output_arg {
+    name: "y"
+    type_attr: "T"
+  }
+  attr {
+    name: "T"
+    type: "type"
+    allowed_values {
+      list {
+        type: DT_FLOAT
+        type: DT_DOUBLE
+      }
+    }
+  }
+  summary: "Returns element-wise integer closest to x."
+  description: "If the result is midway between two representable values,\nthe even representable is chosen.\nFor example:\n\n```\nrint(-1.5) ==> -2.0\nrint(0.5000001) ==> 1.0\nrint([-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0]) ==> [-2., -2., -0., 0., 2., 2., 2.]\n```"
+}
+op {
   name: "Round"
   input_arg {
     name: "x"
@@ -19381,6 +19415,54 @@ op {
   summary: "Splits a tensor into `num_split` tensors along one dimension."
 }
 op {
+  name: "SplitV"
+  input_arg {
+    name: "value"
+    description: "The tensor to split."
+    type_attr: "T"
+  }
+  input_arg {
+    name: "size_splits"
+    description: "list containing the sizes of each output tensor along the split\ndimension. Must sum to the dimension of value along split_dim.\nCan contain one -1 indicating that dimension is to be inferred."
+    type_attr: "Tlen"
+  }
+  input_arg {
+    name: "split_dim"
+    description: "0-D.  The dimension along which to split.  Must be in the range\n`[0, rank(value))`."
+    type: DT_INT32
+  }
+  output_arg {
+    name: "output"
+    description: "Tensors whose shape matches that of `value`\nexcept along `split_dim`, where their sizes are\n`size_splits[i]`."
+    type_attr: "T"
+    number_attr: "num_split"
+  }
+  attr {
+    name: "num_split"
+    type: "int"
+    has_minimum: true
+    minimum: 1
+  }
+  attr {
+    name: "T"
+    type: "type"
+  }
+  attr {
+    name: "Tlen"
+    type: "type"
+    default_value {
+      type: DT_INT64
+    }
+    allowed_values {
+      list {
+        type: DT_INT32
+        type: DT_INT64
+      }
+    }
+  }
+  summary: "Splits a tensor into `num_split` tensors along one dimension."
+}
+op {
   name: "Sqrt"
   input_arg {
     name: "x"
@@ -20468,19 +20550,16 @@ op {
   name: "TensorArray"
   input_arg {
     name: "size"
-    description: "The size of the array."
     type: DT_INT32
   }
   output_arg {
     name: "handle"
-    description: "The handle to the TensorArray."
     type: DT_STRING
     is_ref: true
   }
   attr {
     name: "dtype"
     type: "type"
-    description: "The type of the elements on the tensor_array."
   }
   attr {
     name: "dynamic_size"
@@ -20488,7 +20567,6 @@ op {
     default_value {
       b: false
     }
-    description: "A boolean that determines whether writes to the TensorArray\nare allowed to grow the size.  By default, this is not allowed."
   }
   attr {
     name: "clear_after_read"
@@ -20496,7 +20574,6 @@ op {
     default_value {
       b: true
     }
-    description: "If true (default), Tensors in the TensorArray are cleared\nafter being read.  This disables multiple read semantics but allows early\nrelease of memory."
   }
   attr {
     name: "tensor_array_name"
@@ -20504,19 +20581,31 @@ op {
     default_value {
       s: ""
     }
-    description: "Overrides the name used for the temporary tensor_array\nresource. Default value is the name of the \'TensorArray\' op (which\nis guaranteed unique)."
   }
-  summary: "An array of Tensors of given size, with data written via Write and read"
-  description: "via Read or Pack."
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayV2"
+  }
   is_stateful: true
 }
 op {
   name: "TensorArrayClose"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray (output of TensorArray or TensorArrayGrad)."
     type: DT_STRING
     is_ref: true
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayCloseV2"
+  }
+}
+op {
+  name: "TensorArrayCloseV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray (output of TensorArray or TensorArrayGrad)."
+    type: DT_STRING
   }
   summary: "Delete the TensorArray from its resource container.  This enables"
   description: "the user to close and release the resource in the middle of a step/run."
@@ -20525,9 +20614,45 @@ op {
   name: "TensorArrayConcat"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "value"
+    type_attr: "dtype"
+  }
+  output_arg {
+    name: "lengths"
+    type: DT_INT64
+  }
+  attr {
+    name: "dtype"
+    type: "type"
+  }
+  attr {
+    name: "element_shape_except0"
+    type: "shape"
+    default_value {
+      shape {
+        unknown_rank: true
+      }
+    }
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayConcatV2"
+  }
+}
+op {
+  name: "TensorArrayConcatV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "flow_in"
@@ -20566,9 +20691,45 @@ op {
   name: "TensorArrayGather"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "indices"
+    type: DT_INT32
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "value"
+    type_attr: "dtype"
+  }
+  attr {
+    name: "dtype"
+    type: "type"
+  }
+  attr {
+    name: "element_shape"
+    type: "shape"
+    default_value {
+      shape {
+        unknown_rank: true
+      }
+    }
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayGatherV2"
+  }
+}
+op {
+  name: "TensorArrayGatherV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "indices"
@@ -20607,6 +20768,31 @@ op {
   name: "TensorArrayGrad"
   input_arg {
     name: "handle"
+    type: DT_STRING
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "grad_handle"
+    type: DT_STRING
+    is_ref: true
+  }
+  attr {
+    name: "source"
+    type: "string"
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayGradV2"
+  }
+  is_stateful: true
+}
+op {
+  name: "TensorArrayGradV2"
+  input_arg {
+    name: "handle"
     description: "The handle to the forward TensorArray."
     type: DT_STRING
   }
@@ -20618,7 +20804,6 @@ op {
   output_arg {
     name: "grad_handle"
     type: DT_STRING
-    is_ref: true
   }
   attr {
     name: "source"
@@ -20633,24 +20818,20 @@ op {
   name: "TensorArrayPack"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
   }
   input_arg {
     name: "flow_in"
-    description: "A float scalar that enforces proper chaining of operations."
     type: DT_FLOAT
   }
   output_arg {
     name: "value"
-    description: "All of the elements in the TensorArray, concatenated along a new\naxis (the new dimension 0)."
     type_attr: "dtype"
   }
   attr {
     name: "dtype"
     type: "type"
-    description: "The type of the elem that is returned."
   }
   attr {
     name: "element_shape"
@@ -20660,18 +20841,46 @@ op {
         unknown_rank: true
       }
     }
-    description: "The expected shape of an element, if known. Used to\nvalidate the shapes of TensorArray elements. If this shape is not\nfully specified, packing zero-size TensorArrays is an error."
   }
-  summary: "Pack the elements from the TensorArray into output `value`."
-  description: "**WARNING: This op is deprecated.**\n\nInstead of this op, use `TensorArrayGather` with\n`indices = RangeOp(0, TensorArraySizeOp)`.\n\nAll elements must have the same shape."
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayGatherV2 with RangeOp"
+  }
 }
 op {
   name: "TensorArrayRead"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "index"
+    type: DT_INT32
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "value"
+    type_attr: "dtype"
+  }
+  attr {
+    name: "dtype"
+    type: "type"
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayReadV2"
+  }
+}
+op {
+  name: "TensorArrayReadV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "index"
@@ -20698,9 +20907,40 @@ op {
   name: "TensorArrayScatter"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "indices"
+    type: DT_INT32
+  }
+  input_arg {
+    name: "value"
+    type_attr: "T"
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "flow_out"
+    type: DT_FLOAT
+  }
+  attr {
+    name: "T"
+    type: "type"
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayScatterV2"
+  }
+}
+op {
+  name: "TensorArrayScatterV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "indices"
@@ -20733,9 +20973,28 @@ op {
   name: "TensorArraySize"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray (output of TensorArray or TensorArrayGrad)."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "size"
+    type: DT_INT32
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArraySizeV2"
+  }
+}
+op {
+  name: "TensorArraySizeV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray (output of TensorArray or TensorArrayGrad)."
+    type: DT_STRING
   }
   input_arg {
     name: "flow_in"
@@ -20753,9 +21012,40 @@ op {
   name: "TensorArraySplit"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "value"
+    type_attr: "T"
+  }
+  input_arg {
+    name: "lengths"
+    type: DT_INT64
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "flow_out"
+    type: DT_FLOAT
+  }
+  attr {
+    name: "T"
+    type: "type"
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArraySplitV2"
+  }
+}
+op {
+  name: "TensorArraySplitV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "value"
@@ -20788,39 +21078,113 @@ op {
   name: "TensorArrayUnpack"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
   }
   input_arg {
     name: "value"
-    description: "The concatenated tensor to write to the TensorArray."
     type_attr: "T"
   }
   input_arg {
     name: "flow_in"
-    description: "A float scalar that enforces proper chaining of operations."
     type: DT_FLOAT
   }
   output_arg {
     name: "flow_out"
-    description: "A float scalar that enforces proper chaining of operations."
     type: DT_FLOAT
   }
   attr {
     name: "T"
     type: "type"
   }
-  summary: "Unpack the data from the input value into TensorArray elements."
-  description: "**WARNING: This op is deprecated.**\n\nInstead of this op, use `TensorArrayScatter` with\n`indices = RangeOp(0, SizeOp(value)[0])`."
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayScatterV2 with RangeOp"
+  }
+}
+op {
+  name: "TensorArrayV2"
+  input_arg {
+    name: "size"
+    description: "The size of the array."
+    type: DT_INT32
+  }
+  output_arg {
+    name: "handle"
+    description: "The handle to the TensorArray."
+    type: DT_STRING
+  }
+  attr {
+    name: "dtype"
+    type: "type"
+    description: "The type of the elements on the tensor_array."
+  }
+  attr {
+    name: "dynamic_size"
+    type: "bool"
+    default_value {
+      b: false
+    }
+    description: "A boolean that determines whether writes to the TensorArray\nare allowed to grow the size.  By default, this is not allowed."
+  }
+  attr {
+    name: "clear_after_read"
+    type: "bool"
+    default_value {
+      b: true
+    }
+    description: "If true (default), Tensors in the TensorArray are cleared\nafter being read.  This disables multiple read semantics but allows early\nrelease of memory."
+  }
+  attr {
+    name: "tensor_array_name"
+    type: "string"
+    default_value {
+      s: ""
+    }
+    description: "Overrides the name used for the temporary tensor_array\nresource. Default value is the name of the \'TensorArray\' op (which\nis guaranteed unique)."
+  }
+  summary: "An array of Tensors of given size, with data written via Write and read"
+  description: "via Read or Pack."
+  is_stateful: true
 }
 op {
   name: "TensorArrayWrite"
   input_arg {
     name: "handle"
-    description: "The handle to a TensorArray."
     type: DT_STRING
     is_ref: true
+  }
+  input_arg {
+    name: "index"
+    type: DT_INT32
+  }
+  input_arg {
+    name: "value"
+    type_attr: "T"
+  }
+  input_arg {
+    name: "flow_in"
+    type: DT_FLOAT
+  }
+  output_arg {
+    name: "flow_out"
+    type: DT_FLOAT
+  }
+  attr {
+    name: "T"
+    type: "type"
+  }
+  deprecation {
+    version: 16
+    explanation: "Use TensorArrayWriteV2"
+  }
+}
+op {
+  name: "TensorArrayWriteV2"
+  input_arg {
+    name: "handle"
+    description: "The handle to a TensorArray."
+    type: DT_STRING
   }
   input_arg {
     name: "index"

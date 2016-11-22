@@ -395,10 +395,12 @@ Status DirectSession::Run(const RunOptions& run_options,
   ExecutorsAndKeys* executors_and_keys;
   RunStateArgs run_state_args;
 
+#ifndef NOTFDBG
   // EXPERIMENTAL: Options that allow the client to insert nodes into partition
   // graphs for debugging.
   run_state_args.debugger_state.reset(
       new DebuggerState(run_options.debug_tensor_watch_opts()));
+#endif
 
   TF_RETURN_IF_ERROR(
       GetOrCreateExecutors(pool, input_tensor_names, output_names, target_nodes,
@@ -491,7 +493,12 @@ Status DirectSession::Run(const RunOptions& run_options,
                           ? run_options.timeout_in_ms()
                           : operation_timeout_in_ms_);
 
-  cancellation_manager_->DeregisterCallback(cancellation_token);
+  if (!cancellation_manager_->DeregisterCallback(cancellation_token)) {
+    // The step has been cancelled: make sure we don't attempt to receive the
+    // outputs as this would make it block forever.
+    mutex_lock l(run_state.mu_);
+    run_state.status.Update(errors::Cancelled("Run call was cancelled"));
+  }
 
 #if GOOGLE_CUDA
   if (tracer) {
@@ -775,7 +782,8 @@ Status DirectSession::RecvOutputs(const std::vector<string>& output_names,
     s = Rendezvous::ParseKey(output_key, &parsed);
     if (s.ok()) {
       // Fetch data from the Rendezvous.
-      s = rendez->Recv(parsed, Rendezvous::Args(), &output_tensor, &is_dead);
+      s = rendez->Recv(parsed, Rendezvous::Args(), &output_tensor, &is_dead,
+                       operation_timeout_in_ms_);
       if (is_dead && s.ok()) {
         s = errors::InvalidArgument("The tensor returned for ", output_name,
                                     " was not valid.");
@@ -869,10 +877,12 @@ Status DirectSession::GetOrCreateExecutors(
   std::sort(tn_sorted.begin(), tn_sorted.end());
 
   string debug_tensor_watches_summary;
+#ifndef NOTFDBG
   if (run_state_args->debugger_state) {
     debug_tensor_watches_summary =
         run_state_args->debugger_state->SummarizeDebugTensorWatches();
   }
+#endif
   const string key = strings::StrCat(
       str_util::Join(inputs_sorted, ","), "->",
       str_util::Join(outputs_sorted, ","), "/", str_util::Join(tn_sorted, ","),
@@ -972,10 +982,12 @@ Status DirectSession::GetOrCreateExecutors(
     optimizer.Optimize(lib, options_.env, device, &partition_graph);
 
     // EXPERIMENTAL: tfdbg inserts debug nodes (i.e., probes) to the graph
+#ifndef NOTFDBG
     if (run_state_args->debugger_state) {
       TF_RETURN_IF_ERROR(run_state_args->debugger_state->InsertNodes(
           partition_graph, params.device));
     }
+#endif
     iter->second.reset(partition_graph);
 
     TF_RETURN_IF_ERROR(EnsureMemoryTypes(DeviceType(device->device_type()),
@@ -1182,20 +1194,29 @@ DirectSession::RunState::~RunState() {
 void DirectSession::WaitForNotification(RunState* run_state,
                                         CancellationManager* cm,
                                         int64 timeout_in_ms) {
+  Status status =
+      WaitForNotification(&run_state->executors_done, timeout_in_ms);
+  if (!status.ok()) {
+    {
+      mutex_lock l(run_state->mu_);
+      run_state->status.Update(status);
+    }
+    cm->StartCancel();
+  }
+}
+
+::tensorflow::Status DirectSession::WaitForNotification(
+    Notification* notification, int64 timeout_in_ms) {
   if (timeout_in_ms > 0) {
-    bool notified = WaitForNotificationWithTimeout(&run_state->executors_done,
-                                                   timeout_in_ms);
+    bool notified = WaitForNotificationWithTimeout(notification, timeout_in_ms);
     if (!notified) {
-      {
-        mutex_lock l(run_state->mu_);
-        run_state->status.Update(Status(error::DEADLINE_EXCEEDED,
-                                        "Timed out waiting for notification"));
-      }
-      cm->StartCancel();
+      return Status(error::DEADLINE_EXCEEDED,
+                    "Timed out waiting for notification");
     }
   } else {
-    run_state->executors_done.WaitForNotification();
+    notification->WaitForNotification();
   }
+  return Status::OK();
 }
 
 }  // namespace tensorflow

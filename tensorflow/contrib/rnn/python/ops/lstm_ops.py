@@ -21,7 +21,6 @@ import abc
 
 from tensorflow.contrib.rnn.python.ops import fused_rnn_cell
 from tensorflow.contrib.util import loader
-from tensorflow.python.framework import common_shapes
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
@@ -229,8 +228,6 @@ def _block_lstm(seq_len_max,
 
 _lstm_block_cell_grad_outputs = ["cs_prev_grad", "dicfo"]
 
-ops.RegisterShape("LSTMBlockCell")(common_shapes.call_cpp_shape_fn)
-
 
 @ops.RegisterGradient("LSTMBlockCell")
 def _LSTMBlockCellGrad(op, *grad):
@@ -292,10 +289,6 @@ def _LSTMBlockCellGrad(op, *grad):
           wco_grad, b_grad)
 
 
-ops.RegisterShape("LSTMBlockCellGrad")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("BlockLSTM")(common_shapes.call_cpp_shape_fn)
-
-
 @ops.RegisterGradient("BlockLSTM")
 def _BlockLSTMGrad(op, *grad):
   """Gradient for BlockLSTM."""
@@ -329,9 +322,6 @@ def _BlockLSTMGrad(op, *grad):
 
   return [None, x_grad, cs_prev_grad, h_prev_grad, w_grad, wci_grad, wco_grad,
           wcf_grad, b_grad]
-
-
-ops.RegisterShape("BlockLSTMGrad")(common_shapes.call_cpp_shape_fn)
 
 
 class LSTMBlockCell(rnn_cell.RNNCell):

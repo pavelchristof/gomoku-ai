@@ -1,8 +1,11 @@
 # Minimum CMake required
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 
 # Project
 project(tensorflow C CXX)
+
+# Set C++14 as standard for the whole project
+set(CMAKE_CXX_STANDARD 14)
 
 # Actual source is the ../../.. directory
 get_filename_component(tf_contrib_source_dir ${tensorflow_SOURCE_DIR} PATH)
@@ -25,9 +28,11 @@ option(tensorflow_BUILD_CONTRIB_KERNELS "Build OpKernels from tensorflow/contrib
 option(tensorflow_BUILD_CC_TESTS "Build cc unit tests " OFF)
 option(tensorflow_BUILD_PYTHON_TESTS "Build python unit tests " OFF)
 
-#Threads: defines CMAKE_THREAD_LIBS_INIT and adds -pthread compile option for
-# targets that link ${CMAKE_THREAD_LIBS_INIT}.
-find_package (Threads)
+if (NOT WIN32)
+  # Threads: defines CMAKE_THREAD_LIBS_INIT and adds -pthread compile option
+  # for targets that link ${CMAKE_THREAD_LIBS_INIT}.
+  find_package (Threads)
+endif()
 
 # [CLEANUP] Remove when done
 # For debugging

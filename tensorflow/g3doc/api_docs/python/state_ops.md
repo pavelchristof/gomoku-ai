@@ -407,7 +407,8 @@ containing the absolute value of each element in `x`. For example, if x is
 an input element and y is an output element, this operation computes
 \\(y = |x|\\).
 
-See [`tf.complex_abs()`](#tf_complex_abs) to compute the absolute value of a complex
+See [`tf.complex_abs()`](#tf_complex_abs) to compute the absolute value of a
+complex
 number.
 
 ##### Args:
@@ -1118,21 +1119,28 @@ the variable.
 
 - - -
 
-#### `tf.Variable.ref()` {#Variable.ref}
+#### `tf.Variable.read_value()` {#Variable.read_value}
 
-Returns a reference to this variable.
+Returns the value of this variable, read in the current context.
 
-You usually do not need to call this method as all ops that need a reference
-to the variable call it automatically.
-
-Returns is a `Tensor` which holds a reference to the variable.  You can
-assign a new value to the variable by passing the tensor to an assign op.
-See [`value()`](#Variable.value) if you want to get the value of the
-variable.
+Can be different from value() if it's on another device, with control
+dependencies, etc.
 
 ##### Returns:
 
-  A `Tensor` that is a reference to the variable.
+  A `Tensor` containing the value of the variable.
+
+
+- - -
+
+#### `tf.Variable.set_shape(shape)` {#Variable.set_shape}
+
+Overrides the shape for this variable.
+
+##### Args:
+
+
+*  <b>`shape`</b>: the `TensorShape` representing the overridden shape.
 
 
 - - -
@@ -2619,6 +2627,41 @@ An adaptor for zeros() to match the Initializer spec.
 ### `tf.ones_initializer(dtype=tf.float32, partition_info=None)` {#ones_initializer}
 
 An adaptor for ones() to match the Initializer spec.
+
+
+- - -
+
+### `tf.orthogonal_initializer(gain=1.0, dtype=tf.float32, seed=None)` {#orthogonal_initializer}
+
+Returns an initializer that generates an orthogonal matrix or a reshaped 
+orthogonal matrix.
+
+If the shape of the tensor to initialize is two-dimensional, i is initialized
+with an orthogonal matrix obtained from the singular value decomposition of a
+matrix of uniform random numbers.
+
+If the shape of the tensor to initialize is more than two-dimensional, a matrix
+of shape `(shape[0] * ... * shape[n - 2], shape[n - 1])` is initialized, where
+`n` is the length of the shape vector. The matrix is subsequently reshaped to
+give a tensor of the desired shape.
+
+##### Args:
+
+
+*  <b>`gain`</b>: multiplicative factor to apply to the orthogonal matrix
+*  <b>`dtype`</b>: The type of the output.
+*  <b>`seed`</b>: A Python integer. Used to create random seeds. See
+    [`set_random_seed`](../../api_docs/python/constant_op.md#set_random_seed)
+    for behavior.
+
+##### Returns:
+
+  An initializer that generates orthogonal tensors
+
+##### Raises:
+
+
+*  <b>`ValueError`</b>: if `dtype` is not a floating point type or if `shape` has fewer than two entries.
 
 
 

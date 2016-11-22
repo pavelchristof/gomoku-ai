@@ -428,6 +428,7 @@ tf_kernel_libraries(
         ":depth_space_ops",
         ":extract_image_patches_op",
         ":split_op",
+        ":split_v_op",
         ":unpack_op",
     ],
     prefixes = [
@@ -466,6 +467,13 @@ tf_kernel_library(
     name = "split_op",
     gpu_srcs = ["cuda_device_array.h"],
     prefix = "split_op",
+    deps = ARRAY_DEPS + [":split_lib"],
+)
+
+tf_kernel_library(
+    name = "split_v_op",
+    gpu_srcs = ["cuda_device_array.h"],
+    prefix = "split_v_op",
     deps = ARRAY_DEPS + [":split_lib"],
 )
 
@@ -1084,8 +1092,10 @@ tf_kernel_library(
     srcs = ["resource_variable_ops.cc"],
     deps = [
         ":bounds_check",
+        ":dense_update_ops",
         ":gather_functor",
         ":scatter_functor",
+        ":state",
         ":variable_ops",
         "//tensorflow/core:framework",
         "//tensorflow/core:lib",
@@ -1235,22 +1245,37 @@ tf_cuda_cc_test(
 
 tf_kernel_libraries(
     name = "io",
+    libs = [":save_restore"],
     prefixes = [
         "fixed_length_record_reader_op",
         "identity_reader_op",
         "matching_files_op",
         "reader_ops",
-        "restore_op",
-        "save_op",
-        "save_restore_v2_ops",
         "text_line_reader_op",
         "tf_record_reader_op",
         "whole_file_read_ops",
     ],
     deps = [
-        ":bounds_check_lib",
         ":ops_util",
         ":reader_base",
+        "//tensorflow/core:framework",
+        "//tensorflow/core:io_ops_op_lib",
+        "//tensorflow/core:lib",
+        "//tensorflow/core:lib_internal",
+        "//tensorflow/core:protos_all_cc",
+        "//tensorflow/core/util/tensor_bundle",
+    ],
+)
+
+tf_kernel_libraries(
+    name = "save_restore",
+    prefixes = [
+        "restore_op",
+        "save_op",
+        "save_restore_v2_ops",
+    ],
+    deps = [
+        ":bounds_check_lib",
         ":save_restore_tensor",
         "//tensorflow/core:framework",
         "//tensorflow/core:io_ops_op_lib",
@@ -1681,7 +1706,6 @@ tf_kernel_libraries(
         ":bounds_check",
         ":conv_2d",
         ":conv_ops",
-        ":depthwise_conv_grad_op",
         ":dilation_ops",
         ":fused_batch_norm_util_gpu",
         ":ops_util",
@@ -1693,6 +1717,7 @@ tf_kernel_libraries(
         "//tensorflow/core:nn_ops_op_lib",
         "//third_party/eigen3",
     ] + if_not_windows([
+        ":depthwise_conv_grad_op",
         ":depthwise_conv_op",
     ]),
 )
@@ -2268,6 +2293,9 @@ filegroup(
     srcs = [
         "avgpooling_op.h",
         "bounds_check.h",
+        "cwise_ops.h",
+        "cwise_ops_common.h",
+        "cwise_ops_gradients.h",
         "eigen_activations.h",
         "eigen_attention.h",
         "eigen_backward_cuboid_convolutions.h",
@@ -2277,11 +2305,16 @@ filegroup(
         "eigen_pooling.h",
         "eigen_softmax.h",
         "eigen_spatial_convolutions.h",
+        "fifo_queue.h",
         "maxpooling_op.h",
         "ops_util.cc",
         "ops_util.h",
+        "padding_fifo_queue.h",
         "pooling_ops_common.cc",
         "pooling_ops_common.h",
+        "queue_base.h",
+        "queue_op.h",
+        "typed_queue.h",
     ],
 )
 
@@ -2365,6 +2398,7 @@ filegroup(
         "split_lib.h",
         "split_lib_cpu.cc",
         "split_op.cc",
+        "split_v_op.cc",
         "strided_slice_op.cc",
         "strided_slice_op.h",
         "strided_slice_op_impl.h",
@@ -2409,6 +2443,7 @@ filegroup(
         "conv_ops.h",
         "depthwise_conv_op.h",
         "fake_quant_ops_functor.h",
+        "gemm_functors.h",
         "image_resizer_state.h",
         "maxpooling_op.h",
         "mirror_pad_op.h",
@@ -2450,6 +2485,8 @@ filegroup(
         "conv_grad_ops.cc",
         "conv_grad_ops.h",
         "conv_ops.cc",
+        "conv_ops_fused.cc",
+        "conv_ops_using_gemm.cc",
         "cwise_op_abs.cc",
         "cwise_op_add_1.cc",
         "cwise_op_add_2.cc",
@@ -2459,9 +2496,11 @@ filegroup(
         "cwise_op_exp.cc",
         "cwise_op_floor.cc",
         "cwise_op_greater.cc",
+        "cwise_op_greater_equal.cc",
         "cwise_op_isfinite.cc",
         "cwise_op_less.cc",
         "cwise_op_log.cc",
+        "cwise_op_logical_and.cc",
         "cwise_op_maximum.cc",
         "cwise_op_minimum.cc",
         "cwise_op_mul_1.cc",
@@ -2481,6 +2520,7 @@ filegroup(
         "depthwise_conv_op.cc",
         "dynamic_partition_op.cc",
         "fake_quant_ops.cc",
+        "fifo_queue.cc",
         "fused_batch_norm_op.cc",
         "winograd_transform.h",
         ":android_extended_ops_headers",
@@ -2493,6 +2533,7 @@ filegroup(
         "ctc_decoder_ops.cc",
         "dynamic_stitch_op.cc",
         "in_topk_op.cc",
+        "logging_ops.cc",
         "lrn_op.cc",
         "maxpooling_op.cc",
         "mirror_pad_op.cc",
@@ -2502,6 +2543,10 @@ filegroup(
         "mirror_pad_op_cpu_impl_4.cc",
         "mirror_pad_op_cpu_impl_5.cc",
         "pad_op.cc",
+        "padding_fifo_queue.cc",
+        "padding_fifo_queue_op.cc",
+        "queue_base.cc",
+        "queue_ops.cc",
         "random_op.cc",
         "reduction_ops_common.cc",
         "reduction_ops_max.cc",

@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import contextlib
+import math
 import time
 
 from tensorflow.contrib.framework import deprecated
@@ -27,8 +28,10 @@ from tensorflow.contrib.framework import deprecated_arg_values
 from tensorflow.contrib.learn.python.learn import evaluable
 from tensorflow.contrib.learn.python.learn import monitors
 from tensorflow.contrib.learn.python.learn import trainable
+from tensorflow.contrib.learn.python.learn.estimators import run_config
 from tensorflow.contrib.learn.python.learn.estimators._sklearn import NotFittedError
 from tensorflow.python.platform import tf_logging as logging
+from tensorflow.python.training import basic_session_run_hooks
 from tensorflow.python.training import server_lib
 
 
@@ -43,6 +46,8 @@ class Experiment(object):
   and eval loops in a sensible fashion for distributed training.
   """
 
+  # TODO(ispir): remove delay_workers_by_global_step and make global step based
+  # waiting as only behaviour.
   @deprecated_arg_values(
       "2016-10-23",
       "local_eval_frequency is deprecated as local_run will be renamed to "
@@ -64,7 +69,8 @@ class Experiment(object):
                local_eval_frequency=None,
                eval_delay_secs=120,
                continuous_eval_throttle_secs=60,
-               min_eval_frequency=1):
+               min_eval_frequency=1,
+               delay_workers_by_global_step=False):
     """Constructor for `Experiment`.
 
     Creates an Experiment instance. None of the functions passed to this
@@ -95,6 +101,8 @@ class Experiment(object):
       min_eval_frequency: (applies only to train_and_evaluate). the minimum
         number of steps between evaluations. Of course, evaluation does not
         occur if no new snapshot is available, hence, this is the minimum.
+      delay_workers_by_global_step: if `True` delays training workers
+        based on global step instead of time.
 
     Raises:
       ValueError: if `estimator` does not implement `Evaluable` and `Trainable`.
@@ -110,11 +118,12 @@ class Experiment(object):
     self._eval_metrics = eval_metrics
     self._train_steps = train_steps
     self._eval_steps = eval_steps
-    self._train_monitors = train_monitors
+    self._train_monitors = train_monitors or []
     self._local_eval_frequency = local_eval_frequency
     self._eval_delay_secs = eval_delay_secs
     self._continuous_eval_throttle_secs = continuous_eval_throttle_secs
     self._min_eval_frequency = min_eval_frequency
+    self._delay_workers_by_global_step = delay_workers_by_global_step
 
   @property
   def estimator(self):
@@ -138,14 +147,27 @@ class Experiment(object):
     # we (optionally) sleep for the case where no device_filters are set.
     # Otherwise, the servers will wait to connect to each other before starting
     # to train. We might as well start as soon as we can.
-    if self._estimator.config.cluster_spec and self._estimator.config.master:
+    config = self._estimator.config
+    if (config.environment != run_config.Environment.LOCAL and
+        config.environment != run_config.Environment.GOOGLE and
+        config.cluster_spec and config.master):
       self._start_server()
 
+    extra_hooks = []
     if delay_secs is None:
-      task_id = self._estimator.config.task or 0
-      delay_secs = min(60, task_id * 5)
+      task_id = self._estimator.config.task_id or 0
+      if self._delay_workers_by_global_step:
+        # Wait 5500 global steps for the second worker. Each worker waits more
+        # then previous one but with a diminishing number of steps.
+        extra_hooks.append(
+            basic_session_run_hooks.GlobalStepWaiterHook(
+                int(8000.0 * math.log(task_id + 1))))
+        delay_secs = 0
+      else:
+        # Wait 5 secs more for each new worker up to 60 secs.
+        delay_secs = min(60, task_id * 5)
 
-    if delay_secs:
+    if delay_secs > 0:
       elapsed_secs = time.time() - start
       remaining = delay_secs - elapsed_secs
       logging.info("Waiting %d secs before starting training.", remaining)
@@ -153,7 +175,7 @@ class Experiment(object):
 
     return self._estimator.fit(input_fn=self._train_input_fn,
                                max_steps=self._train_steps,
-                               monitors=self._train_monitors)
+                               monitors=self._train_monitors + extra_hooks)
 
   def evaluate(self, delay_secs=None):
     """Evaluate on the evaluation data.
@@ -336,15 +358,15 @@ class Experiment(object):
   def _start_server(self):
     """Creates, starts, and returns a server_lib.Server."""
     config = self._estimator.config
-    if (not config.cluster_spec or not config.job_name or not config.master or
-        config.task is None):
+    if (not config.cluster_spec or not config.task_type or not config.master or
+        config.task_id is None):
       raise ValueError("Could not start server; be sure to specify "
-                       "cluster_spec, job_name, master, and task in "
+                       "cluster_spec, task_type, master, and task in "
                        "RunConfig or set the TF_CONFIG environment variable.")
     server = server_lib.Server(
         config.cluster_spec,
-        job_name=config.job_name,
-        task_index=config.task,
+        job_name=config.task_type,
+        task_index=config.task_id,
         config=config.tf_config,
         start=False)
     server.start()

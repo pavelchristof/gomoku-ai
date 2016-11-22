@@ -13,13 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-import {DataSet, SpriteAndMetadataInfo, PCA_SAMPLE_DIM, Projection, SAMPLE_SIZE, State} from './data';
-import {Vector} from './vector';
+import {DataSet, PCA_SAMPLE_DIM, Projection, ProjectionType, SAMPLE_SIZE, SpriteAndMetadataInfo, State} from './data';
 import * as vector from './vector';
+import {Vector} from './vector';
 import {Projector} from './vz-projector';
 import {ProjectorInput} from './vz-projector-input';
 // tslint:disable-next-line:no-unused-variable
 import {PolymerElement, PolymerHTMLElement} from './vz-projector-util';
+
+const NUM_PCA_COMPONENTS = 10;
 
 // tslint:disable-next-line
 export let ProjectionsPanelPolymer = PolymerElement({
@@ -30,7 +32,7 @@ export let ProjectionsPanelPolymer = PolymerElement({
     tSNEis3d:
         {type: Boolean, value: true, observer: '_tsneDimensionToggleObserver'},
     // PCA projection.
-    pcaComponents: {type: Array, value: d3.range(0, 10)},
+    pcaComponents: Array,
     pcaX: {type: Number, value: 0, observer: 'showPCAIfEnabled'},
     pcaY: {type: Number, value: 1, observer: 'showPCAIfEnabled'},
     pcaZ: {type: Number, value: 2, observer: 'showPCAIfEnabled'},
@@ -42,18 +44,14 @@ export let ProjectionsPanelPolymer = PolymerElement({
   }
 });
 
-type InputControlName = 'xLeft' | 'xRight' | 'yUp' | 'yDown';
+type InputControlName = 'xLeft'|'xRight'|'yUp'|'yDown';
 
 type CentroidResult = {
-  centroid?: Vector;
-  numMatches?: number;
+  centroid?: Vector; numMatches?: number;
 };
 
 type Centroids = {
-  [key: string]: Vector;
-  xLeft: Vector;
-  xRight: Vector;
-  yUp: Vector;
+  [key: string]: Vector; xLeft: Vector; xRight: Vector; yUp: Vector;
   yDown: Vector;
 };
 
@@ -62,7 +60,9 @@ type Centroids = {
  */
 export class ProjectionsPanel extends ProjectionsPanelPolymer {
   private projector: Projector;
-  private currentProjection: Projection;
+  private pcaComponents:
+      Array<{id: number, componentNumber: number, percVariance: string}>;
+  private currentProjection: ProjectionType;
   private polymerChangesTriggerReprojection: boolean;
   private dataSet: DataSet;
   private originalDataSet: DataSet;
@@ -177,7 +177,7 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
     // TODO: figure out why `--paper-input-container-input` css mixin didn't
     // work.
     this.dom.selectAll('paper-dropdown-menu paper-input input')
-      .style('font-size', '14px');
+        .style('font-size', '14px');
   }
 
   restoreUIFromBookmark(bookmark: State) {
@@ -325,7 +325,7 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
         this.searchByMetadataOptions[Math.max(0, searchByMetadataIndex)];
   }
 
-  public showTab(id: Projection) {
+  public showTab(id: ProjectionType) {
     this.currentProjection = id;
 
     let tab = this.dom.select('.ink-tab[data-tab="' + id + '"]');
@@ -348,7 +348,7 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
     this.beginProjection(id);
   }
 
-  private beginProjection(projection: string) {
+  private beginProjection(projection: ProjectionType) {
     if (this.polymerChangesTriggerReprojection === false) {
       return;
     }
@@ -371,12 +371,15 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
     }
     const accessors =
         dataSet.getPointAccessors('tsne', [0, 1, this.tSNEis3d ? 2 : null]);
-    this.projector.setProjection('tsne', this.tSNEis3d ? 3 : 2, accessors);
+    const dimensionality = this.tSNEis3d ? 3 : 2;
+    const projection =
+        new Projection('tsne', accessors, dimensionality, dataSet);
+    this.projector.setProjection(projection);
 
     if (!this.dataSet.hasTSNERun) {
       this.runTSNE();
     } else {
-      this.projector.notifyProjectionsUpdated();
+      this.projector.notifyProjectionPositionsUpdated();
     }
   }
 
@@ -388,7 +391,7 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
         (iteration: number) => {
           if (iteration != null) {
             this.iterationLabel.text(iteration);
-            this.projector.notifyProjectionsUpdated();
+            this.projector.notifyProjectionPositionsUpdated();
           } else {
             this.runTsneButton.attr('disabled', null);
             this.stopTsneButton.attr('disabled', true);
@@ -403,6 +406,17 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
     }
   }
 
+  private updateTotalVarianceMessage() {
+    let variances = this.dataSet.fracVariancesExplained;
+    let totalVariance = variances[this.pcaX] + variances[this.pcaY];
+    let msg = 'Total variance described: ';
+    if (this.pcaIs3d) {
+      totalVariance += variances[this.pcaZ];
+    }
+    msg += (totalVariance * 100).toFixed(1) + '%.';
+    this.dom.select('#total-variance').html(msg);
+  }
+
   private showPCA() {
     if (this.dataSet == null) {
       return;
@@ -412,7 +426,20 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
       const accessors = this.dataSet.getPointAccessors(
           'pca', [this.pcaX, this.pcaY, this.pcaZ]);
 
-      this.projector.setProjection('pca', this.pcaIs3d ? 3 : 2, accessors);
+      const dimensionality = this.pcaIs3d ? 3 : 2;
+      const projection =
+          new Projection('pca', accessors, dimensionality, this.dataSet);
+      this.projector.setProjection(projection);
+      let numComponents = Math.min(NUM_PCA_COMPONENTS, this.dataSet.dim[1]);
+      this.updateTotalVarianceMessage();
+      this.pcaComponents = d3.range(0, numComponents).map(i => {
+        let fracVariance = this.dataSet.fracVariancesExplained[i];
+        return {
+          id: i,
+          componentNumber: i + 1,
+          percVariance: (fracVariance * 100).toFixed(1)
+        };
+      });
     });
   }
 
@@ -429,7 +456,8 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
     this.dataSet.projectLinear(yDir, 'linear-y');
 
     const accessors = this.dataSet.getPointAccessors('custom', ['x', 'y']);
-    this.projector.setProjection('custom', 2, accessors);
+    const projection = new Projection('custom', accessors, 2, this.dataSet);
+    this.projector.setProjection(projection);
   }
 
   clearCentroids(): void {
@@ -516,10 +544,6 @@ export class ProjectionsPanel extends ProjectionsPanelPolymer {
 
   getTsneSampleSize() {
     return SAMPLE_SIZE.toLocaleString();
-  }
-
-  _addOne(value: number) {
-    return value + 1;
   }
 }
 

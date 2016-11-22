@@ -58,6 +58,7 @@ tf_cc_test(
         "//tensorflow/core:test",
         "//tensorflow/core:test_main",
         "//tensorflow/core:testlib",
+        "//tensorflow/core/kernels:cwise_op",
     ],
 )
 
@@ -73,10 +74,12 @@ tf_kernel_library(
         "hexagon_ops_definitions.h",
         "i_graph_transfer_ops_definitions.h",
     ],
+    data = ["//tensorflow/core:example_parser_configuration_testdata"],
     deps = [
         "//tensorflow/core",
         "//tensorflow/core:core_cpu",
         "//tensorflow/core:framework",
+        "//tensorflow/core:lib",
         "//third_party/eigen3",
     ],
 )

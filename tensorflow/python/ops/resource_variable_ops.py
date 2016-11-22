@@ -19,7 +19,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.framework import common_shapes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import gen_resource_variable_ops
@@ -29,15 +28,6 @@ from tensorflow.python.ops import resources
 # pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_resource_variable_ops import *
 # pylint: enable=wildcard-import
-
-ops.RegisterShape("VarHandleOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("CreateVariableOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("ReadVariableOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("AssignVariableOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("AssignAddVariableOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("VarIsInitializedOp")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("ResourceGather")(common_shapes.call_cpp_shape_fn)
-ops.RegisterShape("ResourceScatterAdd")(common_shapes.call_cpp_shape_fn)
 
 
 def _register_variable_read(read, collections, trainable):
@@ -174,7 +164,7 @@ class ResourceVariable(object):
   def sparse_read(self, indices, collections=None, trainable=True, name=None):
     with ops.name_scope("Gather" if name is None else name):
       value = gen_resource_variable_ops.resource_gather(
-          self._handle, indices, Tparams=self._dtype)
+          self._handle, indices, dtype=self._dtype)
     _register_variable_read(value, collections=collections, trainable=trainable)
     return value
 

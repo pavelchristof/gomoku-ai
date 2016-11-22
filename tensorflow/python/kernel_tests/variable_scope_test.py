@@ -21,6 +21,7 @@ from __future__ import print_function
 import numpy
 import tensorflow as tf
 
+from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import variable_scope
 
@@ -74,10 +75,10 @@ class VariableScopeTest(tf.test.TestCase):
       with tf.variable_scope("tower") as tower:
         with tf.variable_scope("foo", dtype=tf.float16):
           v = tf.get_variable("v", [])
-          self.assertEqual(v.dtype, tf.float16_ref)
+          self.assertEqual(v.dtype, dtypes.float16_ref)
         with tf.variable_scope(tower, dtype=tf.float16):
           w = tf.get_variable("w", [])
-          self.assertEqual(w.dtype, tf.float16_ref)
+          self.assertEqual(w.dtype, dtypes.float16_ref)
 
   def testInitFromNonTensorValue(self):
     with self.test_session() as sess:
@@ -624,7 +625,7 @@ class VariableScopeTest(tf.test.TestCase):
           self.assertEqual(local_var.name, "outer/w:0")
 
       # Since variable is local, it should be in the local variable collection
-      # but not the the trainable collection.
+      # but not the trainable collection.
       self.assertIn(local_var, tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES))
       self.assertIn(local_var, tf.get_collection("foo"))
       self.assertNotIn(

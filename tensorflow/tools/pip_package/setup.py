@@ -26,13 +26,20 @@ from setuptools import find_packages, setup, Command
 from setuptools.command.install import install as InstallCommandBase
 from setuptools.dist import Distribution
 
-_VERSION = '0.11.0rc2'
+_VERSION = '0.11.0'
 
 REQUIRED_PACKAGES = [
     'numpy >= 1.11.0',
     'six >= 1.10.0',
     'protobuf == 3.1.0',
 ]
+
+project_name = 'tensorflow'
+if '--project_name' in sys.argv:
+  project_name_idx = sys.argv.index('--project_name')
+  project_name = sys.argv[project_name_idx + 1]
+  sys.argv.remove('--project_name')
+  sys.argv.pop(project_name_idx)
 
 # python3 requires wheel 0.26
 if sys.version_info.major == 3:
@@ -153,7 +160,7 @@ headers = (list(find_files('*.h', 'tensorflow/core')) +
 
 
 setup(
-    name='tensorflow',
+    name=project_name,
     version=_VERSION,
     description='TensorFlow helps the tensors flow',
     long_description='',

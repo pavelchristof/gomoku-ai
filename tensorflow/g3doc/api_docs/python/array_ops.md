@@ -344,6 +344,10 @@ element of the tensor. Rank is also known as "order", "degree", or "ndims."
 
   A `Tensor` of type `int32`.
 
+@compatibility(numpy)
+Equivalent to np.ndim
+@end_compatibility
+
 
 - - -
 
@@ -423,14 +427,14 @@ reshape(t, []) ==> 7
 
 - - -
 
-### `tf.squeeze(input, squeeze_dims=None, name=None)` {#squeeze}
+### `tf.squeeze(input, axis=None, name=None, squeeze_dims=None)` {#squeeze}
 
 Removes dimensions of size 1 from the shape of a tensor.
 
 Given a tensor `input`, this operation returns a tensor of the same type with
 all dimensions of size 1 removed. If you don't want to remove all size 1
 dimensions, you can remove specific size 1 dimensions by specifying
-`squeeze_dims`.
+`axis`.
 
 For example:
 
@@ -450,10 +454,11 @@ shape(squeeze(t, [2, 4])) ==> [1, 2, 3, 1]
 
 
 *  <b>`input`</b>: A `Tensor`. The `input` to squeeze.
-*  <b>`squeeze_dims`</b>: An optional list of `ints`. Defaults to `[]`.
+*  <b>`axis`</b>: An optional list of `ints`. Defaults to `[]`.
     If specified, only squeezes the dimensions listed. The dimension
     index starts at 0. It is an error to squeeze a dimension that is not 1.
 *  <b>`name`</b>: A name for the operation (optional).
+*  <b>`squeeze_dims`</b>: Deprecated keyword argument that is now axis.
 
 ##### Returns:
 
@@ -461,17 +466,22 @@ shape(squeeze(t, [2, 4])) ==> [1, 2, 3, 1]
   Contains the same data as `input`, but has one or more dimensions of
   size 1 removed.
 
+##### Raises:
+
+
+*  <b>`ValueError`</b>: When both `squeeze_dims` and `axis` are specified.
+
 
 - - -
 
-### `tf.expand_dims(input, dim, name=None)` {#expand_dims}
+### `tf.expand_dims(input, axis=None, name=None, dim=None)` {#expand_dims}
 
 Inserts a dimension of 1 into a tensor's shape.
 
 Given a tensor `input`, this operation inserts a dimension of 1 at the
-dimension index `dim` of `input`'s shape. The dimension index `dim` starts at
-zero; if you specify a negative number for `dim` it is counted backward from
-the end.
+dimension index `axis` of `input`'s shape. The dimension index `axis` starts
+at zero; if you specify a negative number for `axis` it is counted backward
+from the end.
 
 This operation is useful if you want to add a batch dimension to a single
 element. For example, if you have a single image of shape `[height, width,
@@ -480,7 +490,7 @@ which will make the shape `[1, height, width, channels]`.
 
 Other examples:
 
-```prettyprint
+```python
 # 't' is a tensor of shape [2]
 shape(expand_dims(t, 0)) ==> [1, 2]
 shape(expand_dims(t, 1)) ==> [2, 1]
@@ -503,16 +513,20 @@ size 1.
 
 
 *  <b>`input`</b>: A `Tensor`.
-*  <b>`dim`</b>: A `Tensor`. Must be one of the following types: `int32`, `int64`.
-    0-D (scalar). Specifies the dimension index at which to
+*  <b>`axis`</b>: 0-D (scalar). Specifies the dimension index at which to
     expand the shape of `input`.
-*  <b>`name`</b>: A name for the operation (optional).
+*  <b>`name`</b>: The name of the output `Tensor`.
+*  <b>`dim`</b>: 0-D (scalar). Equivalent to `axis`, to be deprecated.
 
 ##### Returns:
 
-  A `Tensor`. Has the same type as `input`.
-  Contains the same data as `input`, but its shape has an additional
+  A `Tensor` with the same data as `input`, but its shape has an additional
   dimension of size 1 added.
+
+##### Raises:
+
+
+*  <b>`ValueError`</b>: if both `dim` and `axis` are specified.
 
 
 - - -
@@ -681,11 +695,11 @@ NOTE: `begin` and `end` are zero-indexed`.
 # 'input' is [[[1, 1, 1], [2, 2, 2]],
 #             [[3, 3, 3], [4, 4, 4]],
 #             [[5, 5, 5], [6, 6, 6]]]
-tf.slice(input, [1, 0, 0], [2, 1, 3], [1, 1, 1]) ==> [[[3, 3, 3]]]
-tf.slice(input, [1, 0, 0], [2, 2, 3], [1, 1, 1]) ==> [[[3, 3, 3],
-                                                       [4, 4, 4]]]
-tf.slice(input, [1, 1, 0], [2, -1, 3], [1, -1, 1]) ==>[[[4, 4, 4],
-                                                        [3, 3, 3]]]
+tf.strided_slice(input, [1, 0, 0], [2, 1, 3], [1, 1, 1]) ==> [[[3, 3, 3]]]
+tf.strided_slice(input, [1, 0, 0], [2, 2, 3], [1, 1, 1]) ==> [[[3, 3, 3],
+                                                               [4, 4, 4]]]
+tf.strided_slice(input, [1, 1, 0], [2, -1, 3], [1, -1, 1]) ==>[[[4, 4, 4],
+                                                                [3, 3, 3]]]
 ```
 
 ##### Args:
@@ -752,6 +766,59 @@ tf.unpack(t, axis=axis)
 ##### Returns:
 
   `num_split` `Tensor` objects resulting from splitting `value`.
+
+
+- - -
+
+### `tf.split_v(value, size_splits, split_dim=0, num=None, name='split_v')` {#split_v}
+
+Splits a tensor into sub tensors.
+
+If size_splits is a scalar, `num_split`, then
+splits `value` along dimension `split_dim` into `num_split` smaller tensors.
+Requires that `num_split` evenly divide `value.shape[split_dim]`.
+
+If size_splits is a tensor, then
+splits `value` into len(size_splits) pieces each the same size as the input
+except along dimension split_dim where the size is size_splits[i].
+
+For example:
+
+```python
+# 'value' is a tensor with shape [5, 30]
+# Split 'value' into 3 tensors with sizes [4, 15, 11] along dimension 1
+split0, split1, split2 = tf.split_v(1, [4, 15, 11], value)
+tf.shape(split0) ==> [5, 4]
+tf.shape(split1) ==> [5, 15]
+tf.shape(split2) ==> [5, 11]
+# Split 'value' into 3 tensors along dimension 1
+split0, split1, split2 = tf.split(value, 3, 1)
+tf.shape(split0) ==> [5, 10]
+```
+
+##### Args:
+
+
+*  <b>`value`</b>: The `Tensor` to split.
+*  <b>`size_splits`</b>: Either an integer indicating the number of splits along
+    split_dim or a 1-D Tensor containing the sizes of each output tensor
+    along split_dim. If an integer then it must evenly divide
+    value.shape[split_dim]; otherwise the sum of sizes along the split
+    dimension must match that of the input.
+*  <b>`split_dim`</b>: A 0-D `int32` `Tensor`. The dimension along which to split.
+    Must be in the range `[0, rank(value))`. Defaults to 0.
+*  <b>`num`</b>: Optional, used to specify the number of outputs when it cannot be
+       inferred from the shape of size_splits.
+*  <b>`name`</b>: A name for the operation (optional).
+
+##### Returns:
+
+  `len(size_splits)` `Tensor` objects resulting from splitting `value`.
+
+##### Raises:
+
+
+*  <b>`ValueError`</b>: If `num` is unspecified and cannot be inferred.
 
 
 - - -
@@ -893,6 +960,67 @@ tf.pack(tensors, axis=axis)
 
 *  <b>`concat_dim`</b>: 0-D `int32` `Tensor`.  Dimension along which to concatenate.
 *  <b>`values`</b>: A list of `Tensor` objects or a single `Tensor`.
+*  <b>`name`</b>: A name for the operation (optional).
+
+##### Returns:
+
+  A `Tensor` resulting from concatenation of the input tensors.
+
+
+- - -
+
+### `tf.concat_v2(values, axis, name='concat_v2')` {#concat_v2}
+
+Concatenates tensors along one dimension.
+
+Concatenates the list of tensors `values` along dimension `axis`.  If
+`values[i].shape = [D0, D1, ... Daxis(i), ...Dn]`, the concatenated
+result has shape
+
+    [D0, D1, ... Raxis, ...Dn]
+
+where
+
+    Raxis = sum(Daxis(i))
+
+That is, the data from the input tensors is joined along the `axis`
+dimension.
+
+The number of dimensions of the input tensors must match, and all dimensions
+except `axis` must be equal.
+
+For example:
+
+```python
+t1 = [[1, 2, 3], [4, 5, 6]]
+t2 = [[7, 8, 9], [10, 11, 12]]
+tf.concat_v2([t1, t2], 0) ==> [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]
+tf.concat_v2([t1, t2], 1) ==> [[1, 2, 3, 7, 8, 9], [4, 5, 6, 10, 11, 12]]
+
+# tensor t3 with shape [2, 3]
+# tensor t4 with shape [2, 3]
+tf.shape(tf.concat_v2([t3, t4], 0)) ==> [4, 3]
+tf.shape(tf.concat_v2([t3, t4], 1)) ==> [2, 6]
+```
+
+Note: If you are concatenating along a new axis consider using pack.
+E.g.
+
+```python
+tf.concat(axis, [tf.expand_dims(t, axis) for t in tensors])
+```
+
+can be rewritten as
+
+```python
+tf.pack(tensors, axis=axis)
+```
+
+##### Args:
+
+
+*  <b>`values`</b>: A list of `Tensor` objects or a single `Tensor`.
+*  <b>`axis`</b>: 0-D `int32` `Tensor`.  Dimension along which to concatenate.
 *  <b>`name`</b>: A name for the operation (optional).
 
 ##### Returns:
@@ -1231,6 +1359,70 @@ reverse(t, dims) ==> [[[[8, 9, 10, 11],
 
 - - -
 
+### `tf.reverse_v2(tensor, axis, name=None)` {#reverse_v2}
+
+Reverses specific dimensions of a tensor.
+
+Given a `tensor`, and a `int32` tensor `axis` representing the set of
+dimensions of `tensor` to reverse. This operation reverses each dimension
+`i` for which there exists `j` s.t. `axis[j] == i`.
+
+`tensor` can have up to 8 dimensions. The number of dimensions specified
+in `axis` may be 0 or more entries. If an index is specified more than
+once, a InvalidArgument error is raised.
+
+For example:
+
+```prettyprint
+# tensor 't' is [[[[ 0,  1,  2,  3],
+#                  [ 4,  5,  6,  7],
+#                  [ 8,  9, 10, 11]],
+#                 [[12, 13, 14, 15],
+#                  [16, 17, 18, 19],
+#                  [20, 21, 22, 23]]]]
+# tensor 't' shape is [1, 2, 3, 4]
+
+# 'dims' is [3] or 'dims' is -1
+reverse(t, dims) ==> [[[[ 3,  2,  1,  0],
+                        [ 7,  6,  5,  4],
+                        [ 11, 10, 9, 8]],
+                       [[15, 14, 13, 12],
+                        [19, 18, 17, 16],
+                        [23, 22, 21, 20]]]]
+
+# 'dims' is '[1]' (or 'dims' is '[-3]')
+reverse(t, dims) ==> [[[[12, 13, 14, 15],
+                        [16, 17, 18, 19],
+                        [20, 21, 22, 23]
+                       [[ 0,  1,  2,  3],
+                        [ 4,  5,  6,  7],
+                        [ 8,  9, 10, 11]]]]
+
+# 'dims' is '[2]' (or 'dims' is '[-2]')
+reverse(t, dims) ==> [[[[8, 9, 10, 11],
+                        [4, 5, 6, 7],
+                        [0, 1, 2, 3]]
+                       [[20, 21, 22, 23],
+                        [16, 17, 18, 19],
+                        [12, 13, 14, 15]]]]
+```
+
+##### Args:
+
+
+*  <b>`tensor`</b>: A `Tensor`. Must be one of the following types: `uint8`, `int8`, `int32`, `int64`, `bool`, `half`, `float32`, `float64`, `complex64`, `complex128`.
+    Up to 8-D.
+*  <b>`axis`</b>: A `Tensor`. Must be one of the following types: `int32`, `int64`.
+    1-D. The indices of the dimensions to reverse.
+*  <b>`name`</b>: A name for the operation (optional).
+
+##### Returns:
+
+  A `Tensor`. Has the same type as `tensor`. The same shape as `tensor`.
+
+
+- - -
+
 ### `tf.transpose(a, perm=None, name='transpose')` {#transpose}
 
 Transposes `a`. Permutes the dimensions according to `perm`.
@@ -1301,7 +1493,7 @@ Extract `patches` from `images` and put them in the "depth" output dimension.
     1-D of length 4. Must be: `[1, rate_rows, rate_cols, 1]`. This is the
     input stride, specifying how far two consecutive patch samples are in the
     input. Equivalent to extracting patches with
-    `patch_sizes_eff = patch_sizes + (patch_sizes - 1) * (rates - 1), followed by
+    `patch_sizes_eff = patch_sizes + (patch_sizes - 1) * (rates - 1)`, followed by
     subsampling them spatially by a factor of `rates`.
 *  <b>`padding`</b>: A `string` from: `"SAME", "VALID"`.
     The type of padding algorithm to use.
@@ -3046,53 +3238,5 @@ Compute gradients for a FakeQuantWithMinMaxVarsPerChannel operation.
     `sum_per_d(gradients * (inputs < min))`.
 *  <b>`backprop_wrt_max`</b>: A `Tensor` of type `float32`. Backpropagated gradients w.r.t. max parameter, shape `[d]`:
     `sum_per_d(gradients * (inputs > max))`.
-
-
-
-## Other Functions and Classes
-- - -
-
-### `tf.listdiff(*args, **kwargs)` {#listdiff}
-
-Computes the difference between two lists of numbers or strings.
-
-  Given a list `x` and a list `y`, this operation returns a list `out` that
-  represents all values that are in `x` but not in `y`. The returned list `out`
-  is sorted in the same order that the numbers appear in `x` (duplicates are
-  preserved). This operation also returns a list `idx` that represents the
-  position of each `out` element in `x`. In other words:
-
-  `out[i] = x[idx[i]] for i in [0, 1, ..., len(out) - 1]`
-
-  For example, given this input:
-
-  ```prettyprint
-  x = [1, 2, 3, 4, 5, 6]
-  y = [1, 3, 5]
-  ```
-
-  This operation would return:
-
-  ```prettyprint
-  out ==> [2, 4, 6]
-  idx ==> [1, 3, 5]
-  ```
-
-  Args:
-    x: A `Tensor`. 1-D. Values to keep.
-    y: A `Tensor`. Must have the same type as `x`. 1-D. Values to remove.
-    out_idx: An optional `tf.DType` from: `tf.int32, tf.int64`. Defaults to `tf.int32`.
-    name: A name for the operation (optional).
-
-  Returns:
-    A tuple of `Tensor` objects (out, idx).
-    out: A `Tensor`. Has the same type as `x`. 1-D. Values present in `x` but not in `y`.
-    idx: A `Tensor` of type `out_idx`. 1-D. Positions of `x` values preserved in `out`.
-
-DEPRECATED FUNCTION
-
-THIS FUNCTION IS DEPRECATED. It will be removed after 2016-11-30.
-Instructions for updating:
-This op will be removed after the deprecation date. Please switch to tf.setdiff1d().
 
 

@@ -47,18 +47,13 @@ export class DemoDataProvider implements DataProvider {
     let msgId = logging.setModalMessage('Fetching projector config...');
     d3.json(this.projectorConfigPath, (err, projectorConfig) => {
       if (err) {
-        logging.setModalMessage('Error: ' + err.responseText);
+        logging.setErrorMessage(err.responseText);
         return;
       }
       logging.setModalMessage(null, msgId);
       this.projectorConfig = projectorConfig;
       callback(projectorConfig);
     });
-  }
-
-  getDefaultTensor(run: string, callback: (tensorName: string) => void) {
-    // Return the first tensor as the default tensor.
-    callback(this.projectorConfig.embeddings[0].tensorName);
   }
 
   retrieveTensor(run: string, tensorName: string,
@@ -69,7 +64,7 @@ export class DemoDataProvider implements DataProvider {
     logging.setModalMessage('Fetching tensors...', TENSORS_MSG_ID);
     d3.text(url, (error: any, dataString: string) => {
       if (error) {
-        logging.setModalMessage('Error: ' + error.responseText);
+        logging.setErrorMessage(error.responseText);
         return;
       }
       dataProvider.parseTensors(dataString, separator).then(points => {
@@ -91,6 +86,16 @@ export class DemoDataProvider implements DataProvider {
 
   getBookmarks(
       run: string, tensorName: string, callback: (r: State[]) => void) {
-    callback([]);
+    let embedding = this.getEmbeddingInfo(tensorName);
+    let msgId = logging.setModalMessage('Fetching bookmarks...');
+    d3.json(embedding.bookmarksPath, (err, bookmarks: State[]) => {
+      if (err) {
+        logging.setErrorMessage(err.responseText);
+        return;
+      }
+
+      logging.setModalMessage(null, msgId);
+      callback(bookmarks);
+    });
   }
 }

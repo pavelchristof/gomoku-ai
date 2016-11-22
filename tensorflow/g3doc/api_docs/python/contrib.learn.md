@@ -322,28 +322,13 @@ Estimator class is the basic TensorFlow model trainer/evaluator.
 
 #### `tf.contrib.learn.Estimator.__init__(model_fn=None, model_dir=None, config=None, params=None, feature_engineering_fn=None)` {#Estimator.__init__}
 
-Constructs an Estimator instance.
+Constructs an `Estimator` instance.
 
 ##### Args:
 
 
-*  <b>`model_fn`</b>: Model function, takes features and labels tensors or dicts of
-            tensors and returns tuple of:
-
-      * predictions: `Tensor`, `SparseTensor` or dictionary of same.
-          Can also be any type that is convertible to a `Tensor` or
-          `SparseTensor`, or dictionary of same.
-      * loss: Scalar loss `Tensor`.
-      * train_op: Training update `Tensor` or `Operation`.
-
-     Supports next three signatures for the function:
-
-      * `(features, labels) -> (predictions, loss, train_op)`
-      * `(features, labels, mode) -> (predictions, loss, train_op)`
-      * `(features, labels, mode, params) -> (predictions, loss, train_op)`
-
-    Where
-
+*  <b>`model_fn`</b>: Model function. Follows the signature:
+    * Args:
       * `features` are single `Tensor` or `dict` of `Tensor`s
              (depending on data passed to `fit`),
       * `labels` are `Tensor` or `dict` of `Tensor`s (for multi-head
@@ -351,11 +336,28 @@ Constructs an Estimator instance.
              passed. If the `model_fn`'s signature does not accept
              `mode`, the `model_fn` must still be able to handle
              `labels=None`.
-      * `mode` represents if this training, evaluation or
+      * `mode` specifies if this training, evaluation or
              prediction. See `ModeKeys`.
       * `params` is a `dict` of hyperparameters. Will receive what
              is passed to Estimator in `params` parameter. This allows
-             to configure Estimators from hyper parameter tunning.
+             to configure Estimators from hyper parameter tuning.
+
+    * Returns:
+      `ModelFnOps`
+
+    Also supports a legacy signature which returns tuple of:
+
+      * predictions: `Tensor`, `SparseTensor` or dictionary of same.
+          Can also be any type that is convertible to a `Tensor` or
+          `SparseTensor`, or dictionary of same.
+      * loss: Scalar loss `Tensor`.
+      * train_op: Training update `Tensor` or `Operation`.
+
+    Supports next three signatures for the function:
+
+      * `(features, labels) -> (predictions, loss, train_op)`
+      * `(features, labels, mode) -> (predictions, loss, train_op)`
+      * `(features, labels, mode, params) -> (predictions, loss, train_op)`
 
 
 *  <b>`model_dir`</b>: Directory to save model parameters, graph and etc. This can
@@ -654,6 +656,125 @@ component of a nested object.
 
 - - -
 
+### `class tf.contrib.learn.Trainable` {#Trainable}
+
+Interface for objects that are trainable by, e.g., `Experiment`.
+- - -
+
+#### `tf.contrib.learn.Trainable.fit(x=None, y=None, input_fn=None, steps=None, batch_size=None, monitors=None, max_steps=None)` {#Trainable.fit}
+
+Trains a model given training data `x` predictions and `y` labels.
+
+##### Args:
+
+
+*  <b>`x`</b>: Matrix of shape [n_samples, n_features...]. Can be iterator that
+     returns arrays of features. The training input samples for fitting the
+     model. If set, `input_fn` must be `None`.
+*  <b>`y`</b>: Vector or matrix [n_samples] or [n_samples, n_outputs]. Can be
+     iterator that returns array of labels. The training label values
+     (class labels in classification, real numbers in regression). If set,
+     `input_fn` must be `None`. Note: For classification, label values must
+     be integers representing the class index (i.e. values from 0 to
+     n_classes-1).
+*  <b>`input_fn`</b>: Input function returning a tuple of:
+      features - Dictionary of string feature name to `Tensor` or `Tensor`.
+      labels - `Tensor` or dictionary of `Tensor` with labels.
+    If input_fn is set, `x`, `y`, and `batch_size` must be `None`.
+*  <b>`steps`</b>: Number of steps for which to train model. If `None`, train forever.
+    'steps' works incrementally. If you call two times fit(steps=10) then
+    training occurs in total 20 steps. If you don't want to have incremental
+    behaviour please set `max_steps` instead. If set, `max_steps` must be
+    `None`.
+*  <b>`batch_size`</b>: minibatch size to use on the input, defaults to first
+    dimension of `x`. Must be `None` if `input_fn` is provided.
+*  <b>`monitors`</b>: List of `BaseMonitor` subclass instances. Used for callbacks
+    inside the training loop.
+*  <b>`max_steps`</b>: Number of total steps for which to train model. If `None`,
+    train forever. If set, `steps` must be `None`.
+
+    Two calls to `fit(steps=100)` means 200 training
+    iterations. On the other hand, two calls to `fit(max_steps=100)` means
+    that the second call will not do any iteration since first call did
+    all 100 steps.
+
+##### Returns:
+
+  `self`, for chaining.
+
+
+
+- - -
+
+### `class tf.contrib.learn.Evaluable` {#Evaluable}
+
+Interface for objects that are evaluatable by, e.g., `Experiment`.
+- - -
+
+#### `tf.contrib.learn.Evaluable.evaluate(x=None, y=None, input_fn=None, feed_fn=None, batch_size=None, steps=None, metrics=None, name=None)` {#Evaluable.evaluate}
+
+Evaluates given model with provided evaluation data.
+
+Stop conditions - we evaluate on the given input data until one of the
+following:
+- If `steps` is provided, and `steps` batches of size `batch_size` are
+processed.
+- If `input_fn` is provided, and it raises an end-of-input
+exception (`OutOfRangeError` or `StopIteration`).
+- If `x` is provided, and all items in `x` have been processed.
+
+The return value is a dict containing the metrics specified in `metrics`, as
+well as an entry `global_step` which contains the value of the global step
+for which this evaluation was performed.
+
+##### Args:
+
+
+*  <b>`x`</b>: Matrix of shape [n_samples, n_features...] containing the input samples
+     for fitting the model. Can be iterator that returns arrays of features.
+     If set, `input_fn` must be `None`.
+*  <b>`y`</b>: Vector or matrix [n_samples] or [n_samples, n_outputs] containing the
+     label values (class labels in classification, real numbers in
+     regression). Can be iterator that returns array of labels. If set,
+     `input_fn` must be `None`. Note: For classification, label values must
+     be integers representing the class index (i.e. values from 0 to
+     n_classes-1).
+*  <b>`input_fn`</b>: Input function returning a tuple of:
+      features - Dictionary of string feature name to `Tensor` or `Tensor`.
+      labels - `Tensor` or dictionary of `Tensor` with labels.
+    If input_fn is set, `x`, `y`, and `batch_size` must be `None`. If
+    `steps` is not provided, this should raise `OutOfRangeError` or
+    `StopIteration` after the desired amount of data (e.g., one epoch) has
+    been provided. See "Stop conditions" above for specifics.
+*  <b>`feed_fn`</b>: Function creating a feed dict every time it is called. Called
+    once per iteration. Must be `None` if `input_fn` is provided.
+*  <b>`batch_size`</b>: minibatch size to use on the input, defaults to first
+    dimension of `x`, if specified. Must be `None` if `input_fn` is
+    provided.
+*  <b>`steps`</b>: Number of steps for which to evaluate model. If `None`, evaluate
+    until `x` is consumed or `input_fn` raises an end-of-input exception.
+    See "Stop conditions" above for specifics.
+*  <b>`metrics`</b>: Dict of metrics to run. If None, the default metric functions
+    are used; if {}, no metrics are used. Otherwise, `metrics` should map
+    friendly names for the metric to a `MetricSpec` object defining which
+    model outputs to evaluate against which labels with which metric
+    function.
+
+    Metric ops should support streaming, e.g., returning `update_op` and
+    `value` tensors. For example, see the options defined in
+    `../../../metrics/python/ops/metrics_ops.py`.
+
+*  <b>`name`</b>: Name of the evaluation if user needs to run multiple evaluations on
+    different data sets, such as on training data vs test data.
+
+##### Returns:
+
+  Returns `dict` with evaluation results.
+
+
+
+- - -
+
 ### `class tf.contrib.learn.ModeKeys` {#ModeKeys}
 
 Standard names for model modes.
@@ -673,24 +794,22 @@ A classifier for TensorFlow DNN models.
 Example:
 
 ```python
-education = sparse_column_with_hash_bucket(column_name="education",
-                                           hash_bucket_size=1000)
-occupation = sparse_column_with_hash_bucket(column_name="occupation",
-                                            hash_bucket_size=1000)
+sparse_feature_a = sparse_column_with_hash_bucket(...)
+sparse_feature_b = sparse_column_with_hash_bucket(...)
 
-education_emb = embedding_column(sparse_id_column=education, dimension=16,
-                                 combiner="sum")
-occupation_emb = embedding_column(sparse_id_column=occupation, dimension=16,
-                                 combiner="sum")
+sparse_feature_a_emb = embedding_column(sparse_id_column=sparse_feature_a,
+                                        ...)
+sparse_feature_b_emb = embedding_column(sparse_id_column=sparse_feature_b,
+                                        ...)
 
 estimator = DNNClassifier(
-    feature_columns=[education_emb, occupation_emb],
+    feature_columns=[sparse_feature_a_emb, sparse_feature_b_emb],
     hidden_units=[1024, 512, 256])
 
 # Or estimator using the ProximalAdagradOptimizer optimizer with
 # regularization.
 estimator = DNNClassifier(
-    feature_columns=[education_emb, occupation_emb],
+    feature_columns=[sparse_feature_a_emb, sparse_feature_b_emb],
     hidden_units=[1024, 512, 256],
     optimizer=tf.train.ProximalAdagradOptimizer(
       learning_rate=0.1,
@@ -698,14 +817,14 @@ estimator = DNNClassifier(
     ))
 
 # Input builders
-def input_fn_train: # returns x, Y
+def input_fn_train: # returns x, y (where y represents label's class index).
   pass
 estimator.fit(input_fn=input_fn_train)
 
-def input_fn_eval: # returns x, Y
+def input_fn_eval: # returns x, y (where y represents label's class index).
   pass
 estimator.evaluate(input_fn=input_fn_eval)
-estimator.predict(x=x)
+estimator.predict(x=x) # returns predicted labels (i.e. label's class index).
 ```
 
 Input of `fit` and `evaluate` should have following features,
@@ -740,7 +859,9 @@ Initializes a DNNClassifier instance.
     also be used to load checkpoints from the directory into a estimator to
     continue training a previously saved model.
 *  <b>`n_classes`</b>: number of label classes. Default is binary classification.
-    It must be greater than 1.
+    It must be greater than 1. Note: Class labels are integers representing
+    the class index (i.e. values from 0 to n_classes-1). For arbitrary
+    label values (e.g. string labels), convert to class indices first.
 *  <b>`weight_column_name`</b>: A string defining feature column name representing
     weights. It is used to down weight or boost examples during training. It
     will be multiplied by the loss of the example.
@@ -794,7 +915,7 @@ This method will be removed after the deprecation date. To inspect variables, us
 
 #### `tf.contrib.learn.DNNClassifier.evaluate(x=None, y=None, input_fn=None, feed_fn=None, batch_size=None, steps=None, metrics=None, name=None)` {#DNNClassifier.evaluate}
 
-See evaluable.Evaluable.
+See evaluable.Evaluable. Note: Labels must be integer class indices.
 
 
 - - -
@@ -808,7 +929,7 @@ See BaseEstimator.export.
 
 #### `tf.contrib.learn.DNNClassifier.fit(x=None, y=None, input_fn=None, steps=None, batch_size=None, monitors=None, max_steps=None)` {#DNNClassifier.fit}
 
-See trainable.Trainable.
+See trainable.Trainable. Note: Labels must be integer class indices.
 
 
 - - -
@@ -868,7 +989,8 @@ altogether. The behavior of this flag is described below.
 
     Returns:
       Numpy array of predicted classes (or an iterable of predicted classes if
-      as_iterable is True).
+      as_iterable is True). Each predicted class is represented by its class
+      index (i.e. integer from 0 to n_classes-1).
 
 
 - - -
@@ -894,7 +1016,8 @@ altogether. The behavior of this flag is described below.
 
     Returns:
       Numpy array of predicted probabilities (or an iterable of predicted
-      probabilities if as_iterable is True).
+      probabilities if as_iterable is True). Each predicted class is represented
+      by its class index (i.e. integer from 0 to n_classes-1).
 
 
 - - -
@@ -918,24 +1041,22 @@ A regressor for TensorFlow DNN models.
 Example:
 
 ```python
-education = sparse_column_with_hash_bucket(column_name="education",
-                                           hash_bucket_size=1000)
-occupation = sparse_column_with_hash_bucket(column_name="occupation",
-                                            hash_bucket_size=1000)
+sparse_feature_a = sparse_column_with_hash_bucket(...)
+sparse_feature_b = sparse_column_with_hash_bucket(...)
 
-education_emb = embedding_column(sparse_id_column=education, dimension=16,
-                                 combiner="sum")
-occupation_emb = embedding_column(sparse_id_column=occupation, dimension=16,
-                                 combiner="sum")
+sparse_feature_a_emb = embedding_column(sparse_id_column=sparse_feature_a,
+                                        ...)
+sparse_feature_b_emb = embedding_column(sparse_id_column=sparse_feature_b,
+                                        ...)
 
 estimator = DNNRegressor(
-    feature_columns=[education_emb, occupation_emb],
+    feature_columns=[sparse_feature_a, sparse_feature_b],
     hidden_units=[1024, 512, 256])
 
 # Or estimator using the ProximalAdagradOptimizer optimizer with
 # regularization.
 estimator = DNNRegressor(
-    feature_columns=[education_emb, occupation_emb],
+    feature_columns=[sparse_feature_a, sparse_feature_b],
     hidden_units=[1024, 512, 256],
     optimizer=tf.train.ProximalAdagradOptimizer(
       learning_rate=0.1,
@@ -943,11 +1064,11 @@ estimator = DNNRegressor(
     ))
 
 # Input builders
-def input_fn_train: # returns x, Y
+def input_fn_train: # returns x, y
   pass
 estimator.fit(input_fn=input_fn_train)
 
-def input_fn_eval: # returns x, Y
+def input_fn_eval: # returns x, y
   pass
 estimator.evaluate(input_fn=input_fn_eval)
 estimator.predict(x=x)
@@ -1083,44 +1204,9 @@ available in the SKCompat class, Estimator will only accept input_fn.
 
 - - -
 
-#### `tf.contrib.learn.DNNRegressor.export(*args, **kwargs)` {#DNNRegressor.export}
+#### `tf.contrib.learn.DNNRegressor.export(export_dir, input_fn=None, input_feature_key=None, use_deprecated_input_fn=True, signature_fn=None, default_batch_size=None, exports_to_keep=None)` {#DNNRegressor.export}
 
-Exports inference graph into given dir. (deprecated arguments)
 
-SOME ARGUMENTS ARE DEPRECATED. They will be removed after 2016-09-23.
-Instructions for updating:
-The signature of the input_fn accepted by export is changing to be consistent with what's used by tf.Learn Estimator's train/evaluate. input_fn (and in most cases, input_feature_key) will become required args, and use_deprecated_input_fn will default to False and be removed altogether.
-
-    Args:
-      export_dir: A string containing a directory to write the exported graph
-        and checkpoints.
-      input_fn: If `use_deprecated_input_fn` is true, then a function that given
-        `Tensor` of `Example` strings, parses it into features that are then
-        passed to the model. Otherwise, a function that takes no argument and
-        returns a tuple of (features, labels), where features is a dict of
-        string key to `Tensor` and labels is a `Tensor` that's currently not
-        used (and so can be `None`).
-      input_feature_key: Only used if `use_deprecated_input_fn` is false. String
-        key into the features dict returned by `input_fn` that corresponds to a
-        the raw `Example` strings `Tensor` that the exported model will take as
-        input. Can only be `None` if you're using a custom `signature_fn` that
-        does not use the first arg (examples).
-      use_deprecated_input_fn: Determines the signature format of `input_fn`.
-      signature_fn: Function that returns a default signature and a named
-        signature map, given `Tensor` of `Example` strings, `dict` of `Tensor`s
-        for features and `Tensor` or `dict` of `Tensor`s for predictions.
-      prediction_key: The key for a tensor in the `predictions` dict (output
-        from the `model_fn`) to use as the `predictions` input to the
-        `signature_fn`. Optional. If `None`, predictions will pass to
-        `signature_fn` without filtering.
-      default_batch_size: Default batch size of the `Example` placeholder.
-      exports_to_keep: Number of exports to keep.
-
-    Returns:
-      The string path to the exported directory. NB: this functionality was
-      added ca. 2016/09/25; clients that depend on the return value may need
-      to handle the case where this function returns None because subclasses
-      are not returning a value.
 
 
 - - -
@@ -1276,43 +1362,13 @@ available in the SKCompat class, Estimator will only accept input_fn.
 
 #### `tf.contrib.learn.DNNRegressor.predict(*args, **kwargs)` {#DNNRegressor.predict}
 
-Returns predictions for given features. (deprecated arguments)
+Runs inference to determine the predicted class. (deprecated arguments)
 
-SOME ARGUMENTS ARE DEPRECATED. They will be removed after 2016-12-01.
+SOME ARGUMENTS ARE DEPRECATED. They will be removed after 2016-09-15.
 Instructions for updating:
-Estimator is decoupled from Scikit Learn interface by moving into
-separate class SKCompat. Arguments x, y and batch_size are only
-available in the SKCompat class, Estimator will only accept input_fn.
-
-##### Example conversion:
-
-  est = Estimator(...) -> est = SKCompat(Estimator(...))
-
-
-*  <b>`Args`</b>: 
-*  <b>`x`</b>: Matrix of shape [n_samples, n_features...]. Can be iterator that
-         returns arrays of features. The training input samples for fitting the
-         model. If set, `input_fn` must be `None`.
-*  <b>`input_fn`</b>: Input function. If set, `x` and 'batch_size' must be `None`.
-*  <b>`batch_size`</b>: Override default batch size. If set, 'input_fn' must be
-        'None'.
-*  <b>`outputs`</b>: list of `str`, name of the output to predict.
-        If `None`, returns all.
-*  <b>`as_iterable`</b>: If True, return an iterable which keeps yielding predictions
-        for each example until inputs are exhausted. Note: The inputs must
-        terminate if you want the iterable to terminate (e.g. be sure to pass
-        num_epochs=1 if you are using something like read_batch_features).
-
-
-*  <b>`Returns`</b>: 
-      A numpy array of predicted classes or regression values if the
-      constructor's `model_fn` returns a `Tensor` for `predictions` or a `dict`
-      of numpy arrays if `model_fn` returns a `dict`. Returns an iterable of
-      predictions if as_iterable is True.
-
-
-*  <b>`Raises`</b>: 
-*  <b>`ValueError`</b>: If x and input_fn are both provided or both `None`.
+The default behavior of predict() is changing. The default value for
+as_iterable will change to True, and then the flag will be removed
+altogether. The behavior of this flag is described below.
 
 
 - - -
@@ -1392,13 +1448,13 @@ estimator = LinearClassifier(
    ))
 
 # Input builders
-def input_fn_train: # returns x, y
+def input_fn_train: # returns x, y (where y represents label's class index).
   ...
-def input_fn_eval: # returns x, y
+def input_fn_eval: # returns x, y (where y represents label's class index).
   ...
 estimator.fit(input_fn=input_fn_train)
 estimator.evaluate(input_fn=input_fn_eval)
-estimator.predict(x=x)
+estimator.predict(x=x) # returns predicted labels (i.e. label's class index).
 ```
 
 Input of `fit` and `evaluate` should have following features,
@@ -1430,6 +1486,9 @@ Construct a `LinearClassifier` estimator object.
     also be used to load checkpoints from the directory into a estimator
     to continue training a previously saved model.
 *  <b>`n_classes`</b>: number of label classes. Default is binary classification.
+    Note that class labels are integers representing the class index (i.e.
+    values from 0 to n_classes-1). For arbitrary label values (e.g. string
+    labels), convert to class indices first.
 *  <b>`weight_column_name`</b>: A string defining feature column name representing
     weights. It is used to down weight or boost examples during training. It
     will be multiplied by the loss of the example.
@@ -1485,7 +1544,7 @@ This method will be removed after the deprecation date. To inspect variables, us
 
 #### `tf.contrib.learn.LinearClassifier.evaluate(x=None, y=None, input_fn=None, feed_fn=None, batch_size=None, steps=None, metrics=None, name=None)` {#LinearClassifier.evaluate}
 
-See evaluable.Evaluable.
+See evaluable.Evaluable. Note: Labels must be integer class indices.
 
 
 - - -
@@ -1499,7 +1558,7 @@ See BaseEstimator.export.
 
 #### `tf.contrib.learn.LinearClassifier.fit(x=None, y=None, input_fn=None, steps=None, batch_size=None, monitors=None, max_steps=None)` {#LinearClassifier.fit}
 
-See trainable.Trainable.
+See trainable.Trainable. Note: Labels must be integer class indices.
 
 
 - - -
@@ -1534,7 +1593,7 @@ See trainable.Trainable.
 
 #### `tf.contrib.learn.LinearClassifier.predict(*args, **kwargs)` {#LinearClassifier.predict}
 
-Runs inference to determine the predicted class. (deprecated arguments)
+Runs inference to determine the predicted class (i.e. class index). (deprecated arguments)
 
 SOME ARGUMENTS ARE DEPRECATED. They will be removed after 2016-09-15.
 Instructions for updating:
@@ -1812,7 +1871,7 @@ See superclass Estimator for more details.
 
 
 *  <b>`x`</b>: features.
-*  <b>`y`</b>: labels.
+*  <b>`y`</b>: labels (must be 0 or 1).
 *  <b>`input_fn`</b>: Input function.
 *  <b>`feed_fn`</b>: Function creating a feed dict every time it is called.
 *  <b>`batch_size`</b>: minibatch size to use on the input.
@@ -2103,68 +2162,32 @@ Perform various training, evaluation, and inference actions on a graph.
 
 ### `class tf.contrib.learn.RunConfig` {#RunConfig}
 
-This class specifies the specific configurations for the run.
+This class specifies the configurations for an `Estimator` run.
 
-If you're a Google-internal user using command line flags with learn_runner.py
-(for instance, to do distributed training or to use parameter servers), you
-probably want to use learn_runner.EstimatorConfig instead.
+If you're a Google-internal user using command line flags with
+`learn_runner.py` (for instance, to do distributed training or to use
+parameter servers), you probably want to use `learn_runner.EstimatorConfig`
+instead.
 - - -
 
-#### `tf.contrib.learn.RunConfig.__init__(master=None, task=None, num_ps_replicas=None, num_cores=0, log_device_placement=False, gpu_memory_fraction=1, cluster_spec=None, tf_random_seed=None, save_summary_steps=100, save_checkpoints_secs=600, save_checkpoints_steps=None, keep_checkpoint_max=5, keep_checkpoint_every_n_hours=10000, job_name=None, is_chief=None, evaluation_master='')` {#RunConfig.__init__}
+#### `tf.contrib.learn.RunConfig.__init__(master=None, num_cores=0, log_device_placement=False, gpu_memory_fraction=1, tf_random_seed=None, save_summary_steps=100, save_checkpoints_secs=600, save_checkpoints_steps=None, keep_checkpoint_max=5, keep_checkpoint_every_n_hours=10000, evaluation_master='')` {#RunConfig.__init__}
 
 Constructor.
 
-If set to None, `master`, `task`, `num_ps_replicas`, `cluster_spec`,
-`job_name`, and `is_chief` are set based on the TF_CONFIG environment
-variable, if the pertinent information is present; otherwise, the defaults
-listed in the Args section apply.
-
-The TF_CONFIG environment variable is a JSON object with two relevant
-attributes: `task` and `cluster_spec`. `cluster_spec` is a JSON serialized
-version of the Python dict described in server_lib.py. `task` has two
-attributes: `type` and `index`, where `type` can be any of the task types
-in the cluster_spec. When TF_CONFIG contains said information, the
-following properties are set on this class:
-
-  * `job_name` is set to [`task`][`type`]
-  * `task` is set to [`task`][`index`]
-  * `cluster_spec` is parsed from [`cluster`]
-  * 'master' is determined by looking up `job_name` and `task` in the
-    cluster_spec.
-  * `num_ps_replicas` is set by counting the number of nodes listed
-    in the `ps` job of `cluster_spec`.
-  * `is_chief`: true when `job_name` == "master" and `task` == 0.
-
-Example:
-```
-  cluster = {'ps': ['host1:2222', 'host2:2222'],
-             'worker': ['host3:2222', 'host4:2222', 'host5:2222']}
-  os.environ['TF_CONFIG'] = json.dumps({
-      {'cluster': cluster,
-       'task': {'type': 'worker', 'index': 1}}})
-  config = RunConfig()
-  assert config.master == 'host4:2222'
-  assert config.task == 1
-  assert config.num_ps_replicas == 2
-  assert config.cluster_spec == server_lib.ClusterSpec(cluster)
-  assert config.job_name == 'worker'
-  assert not config.is_chief
-```
+Note that the superclass `ClusterConfig` may set properties like
+`cluster_spec`, `is_chief`, `master` (if `None` in the args),
+`num_ps_replicas`, `task_id`, and `task_type` based on the `TF_CONFIG`
+environment variable. See `ClusterConfig` for more details.
 
 ##### Args:
 
 
 *  <b>`master`</b>: TensorFlow master. Defaults to empty string for local.
-*  <b>`task`</b>: Task id of the replica running the training (default: 0).
-*  <b>`num_ps_replicas`</b>: Number of parameter server tasks to use (default: 0).
 *  <b>`num_cores`</b>: Number of cores to be used. If 0, the system picks an
     appropriate number (default: 0).
 *  <b>`log_device_placement`</b>: Log the op placement to devices (default: False).
 *  <b>`gpu_memory_fraction`</b>: Fraction of GPU memory used by the process on
     each GPU uniformly on the same machine.
-*  <b>`cluster_spec`</b>: a `tf.train.ClusterSpec` object that describes the cluster
-    in the case of distributed computation. If missing, reasonable
-    assumptions are made for the addresses of jobs.
 *  <b>`tf_random_seed`</b>: Random seed for TensorFlow initializers.
     Setting this value allows consistency between reruns.
 *  <b>`save_summary_steps`</b>: Save summaries every this many steps.
@@ -2179,17 +2202,43 @@ Example:
 *  <b>`keep_checkpoint_every_n_hours`</b>: Number of hours between each checkpoint
     to be saved. The default value of 10,000 hours effectively disables
     the feature.
-*  <b>`job_name`</b>: the type of task, e.g., 'ps', 'worker', etc. The `job_name`
-    must exist in the `cluster_spec.jobs`.
-*  <b>`is_chief`</b>: whether or not this task (as identified by the other parameters)
-    should be the chief task.
 *  <b>`evaluation_master`</b>: the master on which to perform evaluation.
 
-##### Raises:
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.cluster_spec` {#RunConfig.cluster_spec}
 
 
-*  <b>`ValueError`</b>: if num_ps_replicas and cluster_spec are set (cluster_spec
-    may come from the TF_CONFIG environment variable).
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.environment` {#RunConfig.environment}
+
+
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.evaluation_master` {#RunConfig.evaluation_master}
+
+
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.get_task_id()` {#RunConfig.get_task_id}
+
+Returns task index from `TF_CONFIG` environmental variable.
+
+If you have a ClusterConfig instance, you can just access its task_id
+property instead of calling this function and re-parsing the environmental
+variable.
+
+##### Returns:
+
+  `TF_CONFIG['task']['index']`. Defaults to 0.
 
 
 - - -
@@ -2201,7 +2250,28 @@ Example:
 
 - - -
 
-#### `tf.contrib.learn.RunConfig.job_name` {#RunConfig.job_name}
+#### `tf.contrib.learn.RunConfig.master` {#RunConfig.master}
+
+
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.num_ps_replicas` {#RunConfig.num_ps_replicas}
+
+
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.task_id` {#RunConfig.task_id}
+
+
+
+
+- - -
+
+#### `tf.contrib.learn.RunConfig.task_type` {#RunConfig.task_type}
 
 
 

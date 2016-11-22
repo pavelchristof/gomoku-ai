@@ -14,30 +14,25 @@ limitations under the License.
 ==============================================================================*/
 
 import {TSNE} from './bh_tsne';
-import * as knn from './knn';
-import * as scatterPlot from './scatterPlot';
-import {shuffle, getSearchPredicate, runAsyncTask} from './util';
-import * as logging from './logging';
-import * as vector from './vector';
 import {SpriteMetadata} from './data-provider';
+import * as knn from './knn';
+import * as logging from './logging';
+import * as scatterPlot from './scatterPlot';
+import {getSearchPredicate, runAsyncTask, shuffle} from './util';
+import * as vector from './vector';
 
 export type DistanceFunction = (a: number[], b: number[]) => number;
 export type PointAccessor = (index: number) => number;
 export type PointAccessors3D = [PointAccessor, PointAccessor, PointAccessor];
 
-export interface PointMetadata {
-  [key: string]: number | string;
-}
+export interface PointMetadata { [key: string]: number|string; }
 
 export interface DataProto {
   shape: [number, number];
   tensor: number[];
   metadata: {
-    columns: Array<{
-      name: string;
-      stringValues: string[];
-      numericValues: number[];
-    }>;
+    columns: Array<
+        {name: string; stringValues: string[]; numericValues: number[];}>;
   };
 }
 
@@ -58,7 +53,13 @@ export interface SpriteAndMetadataInfo {
   spriteMetadata?: SpriteMetadata;
 }
 
-export interface DataPoint extends scatterPlot.DataPoint {
+/** A single collection of points which make up a trace through space. */
+export interface DataTrace {
+  /** Indices into the DataPoints array in the Data object. */
+  pointIndices: number[];
+}
+
+export interface DataPoint {
   /** The point in the original space. */
   vector: Float32Array;
 
@@ -67,6 +68,12 @@ export interface DataPoint extends scatterPlot.DataPoint {
    * where the value can be a string or a number.
    */
   metadata: PointMetadata;
+
+  /** index of the trace, used for highlighting on click */
+  traceIndex?: number;
+
+  /** index in the original data source */
+  index: number;
 
   /** This is where the calculated projections space are cached */
   projections: {[key: string]: number};
@@ -106,7 +113,7 @@ const TRACE_METADATA_ATTR = '__next__';
  */
 export class DataSet {
   points: DataPoint[];
-  traces: scatterPlot.DataTrace[];
+  traces: DataTrace[];
 
   sampledDataIndices: number[] = [];
 
@@ -122,12 +129,13 @@ export class DataSet {
   dim: [number, number] = [0, 0];
   hasTSNERun: boolean = false;
   spriteAndMetadataInfo: SpriteAndMetadataInfo;
+  fracVariancesExplained: number[];
 
   private tsne: TSNE;
 
   /** Creates a new Dataset */
-  constructor(points: DataPoint[],
-      spriteAndMetadataInfo?: SpriteAndMetadataInfo) {
+  constructor(
+      points: DataPoint[], spriteAndMetadataInfo?: SpriteAndMetadataInfo) {
     this.points = points;
     this.sampledDataIndices =
         shuffle(d3.range(this.points.length)).slice(0, SAMPLE_SIZE);
@@ -141,8 +149,8 @@ export class DataSet {
     // point twice.
     let indicesSeen = new Int8Array(points.length);
     // Compute traces.
-    let indexToTrace: {[index: number]: scatterPlot.DataTrace} = {};
-    let traces: scatterPlot.DataTrace[] = [];
+    let indexToTrace: {[index: number]: DataTrace} = {};
+    let traces: DataTrace[] = [];
     for (let i = 0; i < points.length; i++) {
       if (indicesSeen[i]) {
         continue;
@@ -162,7 +170,7 @@ export class DataSet {
         continue;
       }
       // The current point is pointing to a new/unseen trace.
-      let newTrace: scatterPlot.DataTrace = {pointIndices: []};
+      let newTrace: DataTrace = {pointIndices: []};
       indexToTrace[i] = newTrace;
       traces.push(newTrace);
       let currentIndex = i;
@@ -180,7 +188,7 @@ export class DataSet {
     return traces;
   }
 
-  getPointAccessors(projection: Projection, components: (number|string)[]):
+  getPointAccessors(projection: ProjectionType, components: (number|string)[]):
       [PointAccessor, PointAccessor, PointAccessor] {
     if (components.length > 3) {
       throw new RangeError('components length must be <= 3');
@@ -199,7 +207,7 @@ export class DataSet {
     return accessors;
   }
 
-  projectionCanBeRendered(projection: Projection): boolean {
+  projectionCanBeRendered(projection: ProjectionType): boolean {
     if (projection !== 'tsne') {
       return true;
     }
@@ -215,8 +223,8 @@ export class DataSet {
    * @return A subset of the original dataset.
    */
   getSubset(subset?: number[]): DataSet {
-    let pointsSubset = subset && subset.length ?
-        subset.map(i => this.points[i]) : this.points;
+    let pointsSubset =
+        subset && subset.length ? subset.map(i => this.points[i]) : this.points;
     let points = pointsSubset.map(dp => {
       return {
         metadata: dp.metadata,
@@ -268,8 +276,19 @@ export class DataSet {
       }
       let sigma = numeric.div(
           numeric.dot(numeric.transpose(vectors), vectors), vectors.length);
-      let U: any;
-      U = numeric.svd(sigma).U;
+      let svd = numeric.svd(sigma);
+
+      let variances: number[] = svd.S;
+      let totalVariance = 0;
+      for (let i = 0; i < variances.length; ++i) {
+        totalVariance += variances[i];
+      }
+      for (let i = 0; i < variances.length; ++i) {
+        variances[i] /= totalVariance;
+      }
+      this.fracVariancesExplained = variances;
+
+      let U: number[][] = svd.U;
       let pcaVectors = vectors.map(vector => {
         let newV: number[] = [];
         for (let d = 0; d < NUM_PCA_COMPONENTS; d++) {
@@ -358,7 +377,9 @@ export class DataSet {
         .forEach((m, i) => this.points[i].metadata = m);
   }
 
-  stopTSNE() { this.tSNEShouldStop = true; }
+  stopTSNE() {
+    this.tSNEShouldStop = true;
+  }
 
   /**
    * Finds the nearest neighbors of the query point using a
@@ -367,8 +388,8 @@ export class DataSet {
   findNeighbors(pointIndex: number, distFunc: DistanceFunction, numNN: number):
       knn.NearestEntry[] {
     // Find the nearest neighbors of a particular point.
-    let neighbors = knn.findKNNofPoint(this.points, pointIndex, numNN,
-        (d => d.vector), distFunc);
+    let neighbors = knn.findKNNofPoint(
+        this.points, pointIndex, numNN, (d => d.vector), distFunc);
     // TODO(smilkov): Figure out why we slice.
     let result = neighbors.slice(0, numNN);
     return result;
@@ -389,7 +410,14 @@ export class DataSet {
   }
 }
 
-export type Projection = 'tsne' | 'pca' | 'custom';
+export type ProjectionType = 'tsne' | 'pca' | 'custom';
+
+export class Projection {
+  constructor(
+      public projectionType: ProjectionType,
+      public pointAccessors: PointAccessors3D, public dimensionality: number,
+      public dataSet: DataSet) {}
+}
 
 export interface ColorOption {
   name: string;
@@ -414,7 +442,7 @@ export class State {
   isSelected: boolean = false;
 
   /** The selected projection tab. */
-  selectedProjection: Projection;
+  selectedProjection: ProjectionType;
 
   /** Dimensions of the DataSet. */
   dataSetDimensions: [number, number];
@@ -441,6 +469,9 @@ export class State {
 
   /** The computed projections of the tensors. */
   projections: Array<{[key: string]: number}> = [];
+
+  /** Filtered dataset indices. */
+  filteredPoints: number[];
 
   /** The indices of selected points. */
   selectedPoints: number[] = [];
