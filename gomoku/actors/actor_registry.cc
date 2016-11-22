@@ -9,24 +9,23 @@ ActorRegistry* ActorRegistry::Global() {
   return &actor_registry;
 }
 
-std::unique_ptr<Actor> ActorRegistry::Create(const std::string& name,
+std::unique_ptr<Actor> ActorRegistry::Create(const std::string& type,
                                              const ActorConfig& config) {
   std::unique_lock<std::mutex> lock(mutex_);
-  auto iterator = actor_factories_.find(name);
-  CHECK(iterator != actor_factories_.end()) << "Unknown actor name " << name;
+  auto iterator = actor_factories_.find(type);
+  CHECK(iterator != actor_factories_.end()) << "Unknown actor type " << type;
   return iterator->second(config);
 }
 
-// Register a new actor. Fails if the name was already used.
-bool ActorRegistry::Register(const std::string& name, ActorFactory&& factory) {
+bool ActorRegistry::Register(const std::string& type, ActorFactory&& factory) {
   std::unique_lock<std::mutex> lock(mutex_);
   return actor_factories_.insert(
-      std::make_pair(name, std::move(factory))).second;
+      std::make_pair(type, std::move(factory))).second;
 }
 
-ActorRegistrar::ActorRegistrar(const std::string& name,
+ActorRegistrar::ActorRegistrar(const std::string& type,
                                ActorFactory&& factory) {
-  CHECK(ActorRegistry::Global()->Register(name, std::move(factory)));
+  CHECK(ActorRegistry::Global()->Register(type, std::move(factory)));
 }
 
 }  // namespace gomoku

@@ -15,8 +15,10 @@ message ActorConfig {
 }
 
 message ActorSpec {
-  // Name of the actor.
+  // Unique name of the actor.
   string name = 1;
+  // Type of the actor.
+  string type = 2;
   // Configuration. Depends on the actor.
-  ActorConfig config = 2;
+  ActorConfig config = 3;
 }
