@@ -32,7 +32,9 @@ class TimelineHook(tf.train.SessionRunHook):
     self._counter = 0
 
   def before_run(self, run_context):
-    return tf.train.SessionRunArgs([], should_trace=True)
+    options = tf.RunOptions()
+    options.trace_level = tf.RunOptions.FULL_TRACE
+    return tf.train.SessionRunArgs([], options=options)
 
   def after_run(self, run_context, run_values):
     tl = timeline.Timeline(run_values.run_metadata.step_stats)

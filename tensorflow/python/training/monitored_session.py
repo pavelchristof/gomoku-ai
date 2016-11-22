@@ -743,7 +743,6 @@ class _HookedSession(_WrappedSession):
                             options):
     """Calls hooks.before_run and handles requests from hooks."""
     hook_feeds = {}
-    should_trace = False
     for hook in self._hooks:
       request = hook.before_run(run_context)
       if request is not None:
@@ -758,16 +757,16 @@ class _HookedSession(_WrappedSession):
           self._merge_run_options(options, request.options)
 
     if not hook_feeds:
-      return user_feed_dict, should_trace
+      return user_feed_dict
 
     if not user_feed_dict:
-      return hook_feeds, should_trace
+      return hook_feeds
 
     self._raise_if_feeds_intersects(
         user_feed_dict, hook_feeds,
         'Same tensor is fed by a SessionRunHook and user.')
     hook_feeds.update(user_feed_dict)
-    return hook_feeds, should_trace
+    return hook_feeds
 
   def _raise_if_feeds_intersects(self, feeds1, feeds2, message):
     intersection = set(feeds1.keys()) & set(feeds2.keys())
