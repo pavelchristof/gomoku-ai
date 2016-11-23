@@ -1,4 +1,4 @@
-load("//tensorflow/core:platform/default/build_config.bzl", "tf_proto_library")
+load("@protobuf//:protobuf.bzl", "cc_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -70,9 +70,10 @@ cc_library(
     ],
 )
 
-tf_proto_library(
-    name = "recording_proto",
+cc_proto_library(
+    name = "recording_proto_cc",
     srcs = ["recording.proto"],
-    cc_api_version = 2,
-    visibility = ["//gomoku"],
+    cc_libs = ["@protobuf//:protobuf"],
+    protoc = "@protobuf//:protoc",
+    default_runtime = "@protobuf//:protobuf",
 )

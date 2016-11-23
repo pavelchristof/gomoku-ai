@@ -1,12 +1,13 @@
-load("//tensorflow/core:platform/default/build_config.bzl", "tf_proto_library")
+load("@protobuf//:protobuf.bzl", "cc_proto_library")
 
-package(default_visibility = ["//gomoku"])
+package(default_visibility = ["//visibility:public"])
 
-tf_proto_library(
-    name = "actor_spec_proto",
+cc_proto_library(
+    name = "actor_spec_proto_cc",
     srcs = ["actor_spec.proto"],
-    cc_api_version = 2,
-    visibility = ["//gomoku"],
+    cc_libs = ["@protobuf//:protobuf"],
+    protoc = "@protobuf//:protoc",
+    default_runtime = "@protobuf//:protobuf",
 )
 
 cc_library(

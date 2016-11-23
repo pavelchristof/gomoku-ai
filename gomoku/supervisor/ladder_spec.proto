@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package gomoku;
+
+import "gomoku/actors/actor_spec.proto";
+
+message LadderSpec {
+  // Unique name of the ladder.
+  string name = 1;
+
+  // Actors in the ladder. Could change between runs.
+  repeated ActorSpec actor_spec = 2;
+}

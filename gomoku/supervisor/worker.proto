@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package gomoku;
+
+import "gomoku/actors/actor_spec.proto";
+import "gomoku/core/recording.proto";
+
+message PlayGameRequest {
+  ActorSpec first_player = 1;
+  ActorSpec second_player = 2;
+  int64 move_time_limit_micros = 3;
+  int64 seed = 4;
+}
+
+message PlayGameResponse {
+  Recording recording = 1;
+}
+
+service Worker {
+  rpc PlayGame (PlayGameRequest) returns (PlayGameResponse) {}
+}
