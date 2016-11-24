@@ -497,3 +497,8 @@ git_repository(
   remote = "https://github.com/pawel-n/gflags",
   commit = "3246b129b9a11f254ebb4dbbdf17a75770c8c81c",
 )
+
+bind(
+    name = 'libssl',
+    actual = '@boringssl//:ssl',
+)
