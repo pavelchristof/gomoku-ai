@@ -2,8 +2,8 @@
 
 namespace gomoku {
 
-bool GetString(const ActorConfig& config, const std::string& key,
-               std::string* value) {
+bool GetConfigString(const ActorConfig& config, const std::string& key,
+                     std::string* value) {
   for (const auto& item : config.item()) {
     if (item.key() == key) {
       *value = item.string();
@@ -13,7 +13,8 @@ bool GetString(const ActorConfig& config, const std::string& key,
   return false;
 }
 
-bool GetFloat(const ActorConfig& config, const std::string& key, float* value) {
+bool GetConfigFloat(const ActorConfig& config, const std::string& key,
+                    float* value) {
   for (const auto& item : config.item()) {
     if (item.key() == key) {
       *value = item.floating();
@@ -23,7 +24,8 @@ bool GetFloat(const ActorConfig& config, const std::string& key, float* value) {
   return false;
 }
 
-bool GetInt(const ActorConfig& config, const std::string& key, int* value) {
+bool GetConfigInt(const ActorConfig& config, const std::string& key,
+                  int* value) {
   for (const auto& item : config.item()) {
     if (item.key() == key) {
       *value = item.integer();
@@ -31,6 +33,27 @@ bool GetInt(const ActorConfig& config, const std::string& key, int* value) {
     }
   }
   return false;
+}
+
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   const std::string& value) {
+  auto item = config->add_item();
+  item->set_key(key);
+  item->set_string(value);
+}
+
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   float value) {
+  auto item = config->add_item();
+  item->set_key(key);
+  item->set_floating(value);
+}
+
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   int value) {
+  auto item = config->add_item();
+  item->set_key(key);
+  item->set_integer(value);
 }
 
 }  // namespace gomoku

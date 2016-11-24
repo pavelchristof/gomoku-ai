@@ -6,14 +6,28 @@
 namespace gomoku {
 
 // Finds a string with the given key in the configuration.
-bool GetString(const ActorConfig& config, const std::string& key,
-               std::string* value);
+bool GetConfigString(const ActorConfig& config, const std::string& key,
+                     std::string* value);
 
 // Finds a float with the given key in the configuration.
-bool GetFloat(const ActorConfig& config, const std::string& key, float* value);
+bool GetConfigFloat(const ActorConfig& config, const std::string& key,
+                    float* value);
 
 // Finds an integer with the given key in the configuration.
-bool GetInt(const ActorConfig& config, const std::string& key, int* value);
+bool GetConfigInt(const ActorConfig& config, const std::string& key,
+                  int* value);
+
+// Adds a string item to the given configuration.
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   const std::string& value);
+
+// Adds a float item to the given configuration.
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   float value);
+
+// Adds an int item to the given configuration.
+void AddConfigItem(ActorConfig* config, const std::string& key,
+                   int value);
 
 }  // namespace gomoku
 

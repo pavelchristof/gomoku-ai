@@ -40,7 +40,7 @@ class MonteCarloActor : public Actor {
 
 REGISTER_ACTOR("MonteCarloActor", [] (const ActorConfig& config) {
   std::string cell;
-  CHECK(GetString(config, "cell", &cell));
+  CHECK(GetConfigString(config, "cell", &cell));
   if (cell == "linear")
     return std::unique_ptr<Actor>(new MonteCarloActor<McLinearCell>());
   if (cell == "logistic")
