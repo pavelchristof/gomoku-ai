@@ -25,6 +25,17 @@ cc_proto_library(
 )
 
 cc_library(
+    name = "supervisor",
+    hdrs = ["supervisor.h"],
+    srcs = ["supervisor.cc"],
+    deps = [
+        ":ladder_spec_proto_cc",
+        ":worker_proto_cc",
+        "//tensorflow/core:lib",
+    ],
+)
+
+cc_library(
     name = "worker_impl",
     hdrs = ["worker_impl.h"],
     srcs = ["worker_impl.cc"],
