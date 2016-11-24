@@ -8,6 +8,9 @@ message LadderSpec {
   // Unique name of the ladder.
   string name = 1;
 
+  // Time per move.
+  uint64 move_time_limit_micros = 2;
+
   // Actors in the ladder. Could change between runs.
-  repeated ActorSpec actor_spec = 2;
+  repeated ActorSpec actor_spec = 3;
 }

@@ -8,7 +8,7 @@ import "gomoku/core/recording.proto";
 message PlayGameRequest {
   ActorSpec first_player = 1;
   ActorSpec second_player = 2;
-  int64 move_time_limit_micros = 3;
+  uint64 move_time_limit_micros = 3;
   int64 seed = 4;
 }
 

@@ -1,6 +1,6 @@
 load("@protobuf//:protobuf.bzl", "cc_proto_library")
 
-package(default_visibility = ["//gomoku"])
+package(default_visibility = ["//visibility:public"])
 
 cc_proto_library(
     name = "ladder_spec_proto_cc",
@@ -22,4 +22,15 @@ cc_proto_library(
     cc_libs = ["@protobuf//:protobuf"],
     protoc = "@protobuf//:protoc",
     default_runtime = "@protobuf//:protobuf",
+)
+
+cc_library(
+    name = "worker_impl",
+    hdrs = ["worker_impl.h"],
+    srcs = ["worker_impl.cc"],
+    deps = [
+        ":worker_proto_cc",
+        "//gomoku/actors:actor_registry",
+        "//tensorflow/core:lib",
+    ],
 )
