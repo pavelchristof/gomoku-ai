@@ -3,10 +3,16 @@ load("@protobuf//:protobuf.bzl", "cc_proto_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "integral_types",
+    hdrs = ["integral_types.h"],
+)
+
+cc_library(
     name = "board",
     hdrs = ["board.h"],
     srcs = ["board.cc"],
     deps = [
+        ":integral_types",
         "//tensorflow/core:framework_headers_lib",
         "//third_party/eigen3",
     ],

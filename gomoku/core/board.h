@@ -8,6 +8,7 @@
 
 #include <Eigen/Dense>
 
+#include "gomoku/core/integral_types.h"
 #include "tensorflow/core/platform/logging.h"
 
 namespace gomoku {
@@ -60,8 +61,8 @@ constexpr PlayerMap<Player> kOpponent = {Player::SECOND, Player::FIRST};
 class Board {
  public:
   // Size of the board.
-  static constexpr int kWidth = 19;
-  static constexpr int kHeight = 19;
+  static constexpr int32 kWidth = 19;
+  static constexpr int32 kHeight = 19;
 
   // Executes a function for every field in the board.
   template <typename T>
