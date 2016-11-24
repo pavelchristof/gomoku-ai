@@ -32,13 +32,14 @@ LadderSpec TestLadderSpec() {
 }
 
 void TestLadder() {
-  Supervisor supervisor(TestLadderSpec(),  /*concurrent_games=*/8);
+  BasicLadder ladder(TestLadderSpec());
+  Supervisor supervisor(&ladder,  /*concurrent_games=*/8);
   auto channel = grpc::CreateChannel(
       FLAGS_worker_address, grpc::InsecureChannelCredentials());
   supervisor.AddWorker(Worker::NewStub(channel));
   for (int i = 0; i < 100; ++i) {
     supervisor.Play(64);
-    supervisor.PrintStats();
+    ladder.LogStats();
   }
 }
 
