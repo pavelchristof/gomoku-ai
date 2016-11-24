@@ -1,12 +1,12 @@
-#ifndef GOMOKU_SUPERVISOR_SUPERVISOR_H
-#define GOMOKU_SUPERVISOR_SUPERVISOR_H
+#ifndef GOMOKU_LADDER_SUPERVISOR_H_
+#define GOMOKU_LADDER_SUPERVISOR_H_
 
 #include <random>
 #include <string>
 #include <unordered_map>
 
-#include "gomoku/supervisor/ladder_spec.pb.h"
-#include "gomoku/supervisor/worker.grpc.pb.h"
+#include "gomoku/ladder/ladder.h"
+#include "gomoku/ladder/worker.grpc.pb.h"
 
 namespace gomoku {
 
@@ -46,4 +46,4 @@ class Supervisor {
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_SUPERVISOR_SUPERVISOR_H
+#endif  // GOMOKU_LADDER_SUPERVISOR_H_

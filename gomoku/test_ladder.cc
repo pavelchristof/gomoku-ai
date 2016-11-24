@@ -1,7 +1,7 @@
 #include "gflags/gflags.h"
 #include "gomoku/actors/actor_config.h"
-#include "gomoku/supervisor/supervisor.h"
-#include "gomoku/supervisor/worker.grpc.pb.h"
+#include "gomoku/ladder/supervisor.h"
+#include "gomoku/ladder/worker.grpc.pb.h"
 #include "grpc++/grpc++.h"
 
 DEFINE_string(worker_address, "unix:/tmp/gomoku_worker",

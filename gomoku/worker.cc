@@ -1,5 +1,5 @@
 #include "gflags/gflags.h"
-#include "gomoku/supervisor/worker_impl.h"
+#include "gomoku/ladder/worker_impl.h"
 #include "grpc++/grpc++.h"
 #include "tensorflow/core/platform/logging.h"
 

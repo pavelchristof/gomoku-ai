@@ -1,4 +1,4 @@
-#include "gomoku/supervisor/worker_impl.h"
+#include "gomoku/ladder/worker_impl.h"
 
 #include "gomoku/actors/actor_registry.h"
 #include "tensorflow/core/platform/env.h"

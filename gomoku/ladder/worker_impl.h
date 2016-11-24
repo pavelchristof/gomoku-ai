@@ -1,7 +1,7 @@
-#ifndef GOMOKU_SUPERVISOR_WORKER_IMPL_H_
-#define GOMOKU_SUPERVISOR_WORKER_IMPL_H_
+#ifndef GOMOKU_LADDER_WORKER_IMPL_H_
+#define GOMOKU_LADDER_WORKER_IMPL_H_
 
-#include "gomoku/supervisor/worker.grpc.pb.h"
+#include "gomoku/ladder/worker.grpc.pb.h"
 
 namespace gomoku {
 
@@ -14,4 +14,4 @@ class WorkerImpl final : public Worker::Service {
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_SUPERVISOR_WORKER_IMPL_H_
+#endif  // GOMOKU_LADDER_WORKER_IMPL_H_

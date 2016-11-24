@@ -3,7 +3,7 @@ cc_binary(
     srcs = ["worker.cc"],
     deps = [
         "//gomoku/actors:all_actors",
-        "//gomoku/supervisor:worker_impl",
+        "//gomoku/ladder:worker_impl",
         "//tensorflow/core:lib",
         "@gflags//:gflags",
         "@grpc//:grpc++",
@@ -15,8 +15,8 @@ cc_binary(
     srcs = ["test_ladder.cc"],
     deps = [
         "//gomoku/actors:actor_config",
-        "//gomoku/supervisor:supervisor",
-        "//gomoku/supervisor:worker_proto_cc",
+        "//gomoku/ladder:supervisor",
+        "//gomoku/ladder:worker_proto_cc",
         "@gflags//:gflags",
         "@grpc//:grpc++",
     ],

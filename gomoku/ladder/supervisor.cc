@@ -1,4 +1,4 @@
-#include "gomoku/supervisor/supervisor.h"
+#include "gomoku/ladder/supervisor.h"
 
 #include "gflags/gflags.h"
 #include "tensorflow/core/platform/logging.h"
