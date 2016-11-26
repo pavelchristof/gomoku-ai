@@ -65,6 +65,24 @@ cc_test(
     ],
 )
 
+cc_proto_library(
+    name = "metrics_proto_cc",
+    srcs = ["metrics.proto"],
+    cc_libs = ["@protobuf//:protobuf"],
+    protoc = "@protobuf//:protoc",
+    default_runtime = "@protobuf//:protobuf",
+)
+
+cc_library(
+    name = "metrics",
+    hdrs = ["metrics.h"],
+    srcs = ["metrics.cc"],
+    deps = [
+        ":metrics_proto_cc",
+        "//tensorflow/core:lib",
+    ],
+)
+
 cc_library(
     name = "actor",
     hdrs = ["actor.h"],
@@ -72,7 +90,7 @@ cc_library(
     deps = [
         ":board",
         ":feature",
-        ":monte_carlo",
+        ":metrics",
     ],
 )
 

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "gomoku/core/board.h"
-#include "gomoku/core/monte_carlo.h"
+#include "gomoku/core/metrics.pb.h"
 
 namespace gomoku {
 
@@ -17,7 +17,7 @@ class Actor {
   virtual ~Actor() {}
 
   // Signals that the game started and the player you are playing as.
-  virtual void GameStarted(Player me, int seed) = 0;
+  virtual void GameStarted(Player me, int seed, Metrics* metrics) = 0;
 
   // Called when someone made a move.
   virtual void ObserveMove(Eigen::Vector2i move) = 0;

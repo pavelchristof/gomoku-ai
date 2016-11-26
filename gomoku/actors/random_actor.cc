@@ -4,7 +4,7 @@ namespace gomoku {
 
 class RandomActor : public Actor {
  public:
-  void GameStarted(Player me, int seed) override {
+  void GameStarted(Player me, int seed, Metrics*) override {
     board_.Reset();
     rng_.seed(seed);
   }

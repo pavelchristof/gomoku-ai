@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package gomoku;
+
+message Metric {
+  string name = 1;
+  oneof value {
+    float mean = 2;
+    Metrics group = 3;
+  }
+}
+
+message Metrics {
+  repeated Metric metric = 1;
+}

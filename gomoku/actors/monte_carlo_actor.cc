@@ -1,14 +1,16 @@
 #include "gomoku/actors/actor_registry.h"
 #include "gomoku/actors/actor_config.h"
+#include "gomoku/core/metrics.h"
 #include "gomoku/core/monte_carlo.h"
 
 namespace gomoku {
 
 template <typename Cell>
 class MonteCarloActor : public Actor {
-  void GameStarted(Player me, int seed) override {
+  void GameStarted(Player me, int seed, Metrics* metrics) override {
     board_.Reset();
     rng_.seed(seed);
+    metrics_ = metrics;
   }
   void ObserveMove(Eigen::Vector2i move) override {
     board_.ApplyMove(move);
@@ -16,6 +18,9 @@ class MonteCarloActor : public Actor {
 
   Eigen::Vector2i ChooseMove(StopSignal stop_signal) override {
     Cell cell{FeatureMatrix::Constant(0.5f), 1e-3f};
+
+    // Simulate games until the time runs out.
+    int iterations = 0;
     while (!stop_signal()) {
       Board board = board_;
       const Eigen::Vector2i exploring_move = SampleSoftmax(
@@ -29,13 +34,24 @@ class MonteCarloActor : public Actor {
       Player winner = kOpponent[board.CurrentPlayer()];
       float score = winner == board_.CurrentPlayer() ? 1.0f : 0.0f;
       cell.Update(exploring_move, score);
+      iterations++;
     }
-    return SampleGreedy(cell.WinProb(), StoneMatrix(board_, Player::NONE));
+    AddMetricMean(metrics_, "iterations", board_.MovesMade(), iterations);
+
+    // Pick the best move.
+    FeatureMatrix win_prob = cell.WinProb();
+    Eigen::Vector2i move = SampleGreedy(
+        cell.WinProb(), StoneMatrix(board_, Player::NONE));
+    AddMetricMean(metrics_, "expected_score", board_.MovesMade(),
+                  win_prob(move.x(), move.y()));
+
+    return move;
   }
 
  private:
   Board board_;
   std::mt19937_64 rng_;
+  Metrics* metrics_;
 };
 
 REGISTER_ACTOR("MonteCarloActor", [] (const ActorConfig& config) {

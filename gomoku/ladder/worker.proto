@@ -3,6 +3,7 @@ syntax = "proto3";
 package gomoku;
 
 import "gomoku/actors/actor_spec.proto";
+import "gomoku/core/metrics.proto";
 import "gomoku/core/recording.proto";
 
 message PlayGameRequest {
@@ -14,6 +15,7 @@ message PlayGameRequest {
 
 message PlayGameResponse {
   Recording recording = 1;
+  Metrics metrics = 2;
 }
 
 service Worker {

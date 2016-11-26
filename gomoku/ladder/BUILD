@@ -16,6 +16,7 @@ cc_proto_library(
     srcs = ["worker.proto"],
     deps = [
         "//gomoku/actors:actor_spec_proto_cc",
+        "//gomoku/core:metrics_proto_cc",
         "//gomoku/core:recording_proto_cc",
     ],
     use_grpc_plugin = True,
@@ -53,6 +54,7 @@ cc_library(
     deps = [
         ":worker_proto_cc",
         "//gomoku/actors:actor_registry",
+        "//gomoku/core:metrics",
         "//tensorflow/core:lib",
     ],
 )

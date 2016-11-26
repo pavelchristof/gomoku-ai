@@ -1,6 +1,7 @@
 #include "gomoku/ladder/worker_impl.h"
 
 #include "gomoku/actors/actor_registry.h"
+#include "gomoku/core/metrics.h"
 #include "tensorflow/core/platform/env.h"
 
 namespace gomoku {
@@ -16,17 +17,23 @@ StopSignal NewStopSignal(uint64 deadline_micros) {
 grpc::Status WorkerImpl::PlayGame(grpc::ServerContext* context,
                                   const PlayGameRequest* request,
                                   PlayGameResponse* response) {
-  PlayerMap<std::unique_ptr<Actor>> actors = {
-    ActorRegistry::Global()->Create(
-        request->first_player().type(), request->first_player().config()),
-    ActorRegistry::Global()->Create(
-        request->second_player().type(), request->second_player().config())
+  PlayerMap<ActorSpec> actor_specs = {
+    request->first_player(), request->second_player()
   };
+  PlayerMap<std::unique_ptr<Actor>> actors;
   std::mt19937_64 rng(request->seed());
 
-  for (auto player : kPlayers)
-    actors[player]->GameStarted(player, rng());
+  // Prepare the actors.
+  for (Player player : kPlayers) {
+    const ActorSpec& spec = actor_specs[player];
+    actors[player] = ActorRegistry::Global()->Create(spec.type(),
+                                                     spec.config());
+    Metrics* actor_metrics = AddMetricGroup(
+        response->mutable_metrics(), spec.name());
+    actors[player]->GameStarted(player, rng(), actor_metrics);
+  }
 
+  // Playout the game.
   Board board;
   Eigen::Vector2i move;
   do {
@@ -42,6 +49,7 @@ grpc::Status WorkerImpl::PlayGame(grpc::ServerContext* context,
     move_record->set_y(move.y());
   } while (!board.DidWin(move) && !board.NoMovePossible());
 
+  // Check if the game was a draw.
   if (board.DidWin(move)) {
     auto winner = kOpponent[board.CurrentPlayer()];
     PlayerMap<float> scores{1.0f, 0.0f};

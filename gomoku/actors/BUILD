@@ -41,6 +41,7 @@ cc_library(
     deps = [
         ":actor_config",
         ":actor_registry",
+        "//gomoku/core:metrics",
         "//gomoku/core:monte_carlo",
     ],
     alwayslink = 1,

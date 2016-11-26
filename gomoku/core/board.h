@@ -89,6 +89,8 @@ class Board {
   bool operator!= (const Board& board) const {
     return !(*this == board);
   }
+  
+  int MovesMade() const { return moves_made_; }
 
   // The player that should make the next move.
   Player CurrentPlayer() const { return current_player_; }
