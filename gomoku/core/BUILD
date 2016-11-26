@@ -46,25 +46,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "monte_carlo",
-    hdrs = ["monte_carlo.h"],
-    srcs = ["monte_carlo.cc"],
-    deps = [
-        ":board",
-        ":feature",
-    ],
-)
-
-cc_test(
-    name = "monte_carlo_test",
-    srcs = ["monte_carlo_test.cc"],
-    deps = [
-        ":monte_carlo",
-        "//tensorflow/core:test",
-    ],
-)
-
 cc_proto_library(
     name = "metrics_proto_cc",
     srcs = ["metrics.proto"],

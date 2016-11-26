@@ -1,4 +1,4 @@
-#include "gomoku/core/monte_carlo.h"
+#include "gomoku/actors/mc_cell.h"
 
 namespace gomoku {
 

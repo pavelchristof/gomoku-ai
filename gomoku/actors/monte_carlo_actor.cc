@@ -1,7 +1,7 @@
 #include "gomoku/actors/actor_registry.h"
 #include "gomoku/actors/actor_config.h"
+#include "gomoku/actors/mc_cell.h"
 #include "gomoku/core/metrics.h"
-#include "gomoku/core/monte_carlo.h"
 
 namespace gomoku {
 

@@ -1,5 +1,5 @@
-#ifndef GOMOKU_CORE_MONTE_CARLO_
-#define GOMOKU_CORE_MONTE_CARLO_
+#ifndef GOMOKU_ACTORS_MC_CELL_H_
+#define GOMOKU_ACTORS_MC_CELL_H_
 
 #include <random>
 
@@ -59,4 +59,4 @@ Eigen::Vector2i SampleSoftmax(const FeatureMatrix& win_prob,
 
 }  // namespace gomoku
 
-#endif  // GOMOKU_CORE_MONTE_CARLO_
+#endif  // GOMOKU_ACTORS_MC_CELL_H_

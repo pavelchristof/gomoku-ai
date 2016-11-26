@@ -36,13 +36,32 @@ cc_library(
 )
 
 cc_library(
+    name = "mc_cell",
+    hdrs = ["mc_cell.h"],
+    srcs = ["mc_cell.cc"],
+    deps = [
+        "//gomoku/core:board",
+        "//gomoku/core:feature",
+    ],
+)
+
+cc_test(
+    name = "mc_cell_test",
+    srcs = ["mc_cell_test.cc"],
+    deps = [
+        ":mc_cell",
+        "//tensorflow/core:test",
+    ],
+)
+
+cc_library(
     name = "monte_carlo_actor",
     srcs = ["monte_carlo_actor.cc"],
     deps = [
         ":actor_config",
         ":actor_registry",
+        ":mc_cell",
         "//gomoku/core:metrics",
-        "//gomoku/core:monte_carlo",
     ],
     alwayslink = 1,
 )
