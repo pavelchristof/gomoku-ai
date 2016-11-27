@@ -43,6 +43,7 @@ cc_library(
     deps = [
         ":ladder",
         ":worker_proto_cc",
+        "//gomoku/core:metrics",
         "//tensorflow/core:lib",
     ],
 )

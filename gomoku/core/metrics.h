@@ -3,6 +3,8 @@
 
 #include "gomoku/core/metrics.pb.h"
 
+#include <map>
+
 namespace gomoku {
 
 // Adds a metric that computes the mean of all samples.
@@ -12,6 +14,22 @@ void AddMetricMean(Metrics* metrics, const std::string& name, int key,
 
 // Adds a new metric group and returns a pointer to it.
 Metrics* AddMetricGroup(Metrics* metrics, const std::string& name);
+
+// Flattens metrics, eliminating metric groups.
+std::vector<Metric> FlattenMetrics(const Metrics& metrics);
+
+// Collects metrics and shows them.
+class MetricCollector {
+ public:
+  // Appends some metrics.
+  void Append(const Metrics& metrics);
+
+  // Logs all metrics.
+  void LogMetrics() const;
+
+ private:
+  std::map<std::string, Metric> metrics_;
+};
 
 }  // namespace gomoku
 

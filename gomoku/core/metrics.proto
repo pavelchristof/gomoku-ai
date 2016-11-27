@@ -3,9 +3,14 @@ syntax = "proto3";
 package gomoku;
 
 message Metric {
+  message Mean {
+    float value = 1;
+    uint64 count = 2;
+  }
+
   string name = 1;
   oneof value {
-    float mean = 2;
+    Mean mean = 2;
     Metrics group = 3;
   }
 }

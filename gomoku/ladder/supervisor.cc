@@ -61,6 +61,7 @@ void Supervisor::Play(int num_games) {
       continue;
     }
 
+    metric_collector_->Append(call->response.metrics());
     ladder_->GameCompleted(call->request, call->response);
     games_completed += 1;
 
