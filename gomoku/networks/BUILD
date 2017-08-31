@@ -7,7 +7,8 @@ py_library(
     srcs = ["networks.py"],
     deps = [
         "//tensorflow:tensorflow_py",
-    ]
+    ],
+    srcs_version = "PY2AND3",
 )
 
 cc_library(
@@ -27,7 +28,7 @@ tf_custom_op_library(
         ":default_features",
         "//gomoku/core:board",
         "//gomoku/core:recording_proto_cc",
-    ]
+    ],
 )
 
 py_library(
@@ -36,7 +37,8 @@ py_library(
     data = ["replay_ops_kernel.so"],
     deps = [
         "//tensorflow:tensorflow_py",
-    ]
+    ],
+    srcs_version = "PY2AND3",
 )
 
 py_test(
@@ -46,7 +48,8 @@ py_test(
         ":replay_ops",
         "//gomoku/core:recording_proto_py",
         "//tensorflow:tensorflow_py",
-    ]
+    ],
+    srcs_version = "PY2AND3",
 )
 
 py_binary(
@@ -57,4 +60,5 @@ py_binary(
         ":replay_ops",
         "//tensorflow:tensorflow_py",
     ],
+    srcs_version = "PY2AND3",
 )
