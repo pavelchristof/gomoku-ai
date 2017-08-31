@@ -1,13 +1,13 @@
-load("@protobuf//:protobuf.bzl", "cc_proto_library")
-
 package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "actor_spec_proto",
+    srcs = ["actor_spec.proto"],
+)
 
 cc_proto_library(
     name = "actor_spec_proto_cc",
-    srcs = ["actor_spec.proto"],
-    cc_libs = ["@protobuf//:protobuf"],
-    protoc = "@protobuf//:protoc",
-    default_runtime = "@protobuf//:protobuf",
+    deps = ["actor_spec_proto"],
 )
 
 cc_library(

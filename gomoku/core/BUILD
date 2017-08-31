@@ -1,5 +1,3 @@
-load("@protobuf//:protobuf.bzl", "cc_proto_library")
-
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -46,12 +44,14 @@ cc_test(
     ],
 )
 
+proto_library(
+  name = "metrics_proto",
+  srcs = ["metrics.proto"],
+)
+
 cc_proto_library(
     name = "metrics_proto_cc",
-    srcs = ["metrics.proto"],
-    cc_libs = ["@protobuf//:protobuf"],
-    protoc = "@protobuf//:protoc",
-    default_runtime = "@protobuf//:protobuf",
+    deps = ["metrics_proto"],
 )
 
 cc_library(
@@ -75,10 +75,12 @@ cc_library(
     ],
 )
 
+proto_library(
+  name = "recording_proto",
+  srcs = ["recording.proto"],
+)
+
 cc_proto_library(
     name = "recording_proto_cc",
-    srcs = ["recording.proto"],
-    cc_libs = ["@protobuf//:protobuf"],
-    protoc = "@protobuf//:protoc",
-    default_runtime = "@protobuf//:protobuf",
+    deps = ["recording_proto"],
 )

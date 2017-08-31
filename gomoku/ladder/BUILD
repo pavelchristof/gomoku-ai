@@ -1,18 +1,18 @@
-load("@protobuf//:protobuf.bzl", "cc_proto_library")
-
 package(default_visibility = ["//visibility:public"])
 
-cc_proto_library(
-    name = "ladder_spec_proto_cc",
-    srcs = ["ladder_spec.proto"],
-    deps = ["//gomoku/actors:actor_spec_proto_cc"],
-    cc_libs = ["@protobuf//:protobuf"],
-    protoc = "@protobuf//:protoc",
-    default_runtime = "@protobuf//:protobuf",
+proto_library(
+  name = "ladder_spec_proto",
+  srcs = ["ladder_spec.proto"],
+  deps = ["//gomoku/actors:actor_spec_proto_cc"],
 )
 
 cc_proto_library(
-    name = "worker_proto_cc",
+    name = "ladder_spec_proto_cc",
+    deps = ["ladder_spec_proto"],
+)
+
+proto_library(
+    name = "worker_proto",
     srcs = ["worker.proto"],
     deps = [
         "//gomoku/actors:actor_spec_proto_cc",
@@ -20,9 +20,12 @@ cc_proto_library(
         "//gomoku/core:recording_proto_cc",
     ],
     use_grpc_plugin = True,
-    cc_libs = ["@protobuf//:protobuf"],
-    protoc = "@protobuf//:protoc",
-    default_runtime = "@protobuf//:protobuf",
+)
+
+cc_proto_library(
+    name = "worker_proto_cc",
+    srcs = ["worker_proto"],
+    use_grpc_plugin = True,
 )
 
 cc_library(
