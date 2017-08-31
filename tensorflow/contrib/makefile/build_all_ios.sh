@@ -18,7 +18,7 @@ set -e
 
 # Make sure we're on OS X.
 if [[ $(uname) != "Darwin" ]]; then
-    echo "ERROR: This makefile build requires OS X, which the current system "\
+    echo "ERROR: This makefile build requires macOS, which the current system "\
     "is not."
     exit 1
 fi
@@ -27,26 +27,34 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd ${SCRIPT_DIR}/../../../
 
-# You can set the parallelism of the make process with the first argument, with
-# a default of four if nothing is supplied.
-if [ "$#" -gt 1 ]; then
-    JOBS_COUNT=$1
-else
-    JOBS_COUNT=4
-fi
 
 # Remove any old files first.
 make -f tensorflow/contrib/makefile/Makefile clean
 rm -rf tensorflow/contrib/makefile/downloads
 
+# Setting a deployment target is required for building with bitcode,
+# otherwise linking will fail with:
+#
+#    ld: -bind_at_load and -bitcode_bundle (Xcode setting ENABLE_BITCODE=YES) cannot be used together
+#
+if [[ -n MACOSX_DEPLOYMENT_TARGET ]]; then
+    export MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion)
+fi
+
 # Pull down the required versions of the frameworks we need.
 tensorflow/contrib/makefile/download_dependencies.sh
 
 # Compile protobuf for the target iOS device architectures.
-tensorflow/contrib/makefile/compile_ios_protobuf.sh ${JOBS_COUNT}
+tensorflow/contrib/makefile/compile_ios_protobuf.sh
+
+# Compile nsync for the target iOS device architectures.
+# Don't use  export var=`something` syntax; it swallows the exit status.
+HOST_NSYNC_LIB=`tensorflow/contrib/makefile/compile_nsync.sh`
+TARGET_NSYNC_LIB=`tensorflow/contrib/makefile/compile_nsync.sh -t ios`
+export HOST_NSYNC_LIB TARGET_NSYNC_LIB
 
 # Build the iOS TensorFlow libraries.
-tensorflow/contrib/makefile/compile_ios_tensorflow.sh "-O3" -j ${JOBS_COUNT}
+tensorflow/contrib/makefile/compile_ios_tensorflow.sh "-O3"
 
-# Creates a static universal library in 
+# Creates a static universal library in
 # tensorflow/contrib/makefile/gen/lib/libtensorflow-core.a

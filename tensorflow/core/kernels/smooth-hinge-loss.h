@@ -16,7 +16,6 @@ limitations under the License.
 #ifndef TENSORFLOW_KERNELS_SMOOTH_HINGE_LOSS_H_
 #define TENSORFLOW_KERNELS_SMOOTH_HINGE_LOSS_H_
 
-#include <algorithm>
 #include <limits>
 
 #include "tensorflow/core/kernels/loss.h"
@@ -36,7 +35,7 @@ class SmoothHingeLossUpdater : public DualLossUpdater {
                             const double current_dual, const double wx,
                             const double weighted_example_norm) const final {
     // Intutitvely there are 3 cases:
-    // a. new optimal value of the dual variable falls withing the admissible
+    // a. new optimal value of the dual variable falls within the admissible
     // range [0, 1]. In this case we set new dual to this value.
     // b. new optimal value is < 0. Then, because of convexity, the optimal
     // valid value for new dual = 0

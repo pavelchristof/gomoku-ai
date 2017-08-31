@@ -28,8 +28,11 @@ message TensorProto {
   // to represent a constant Tensor with a single value.
   int32 version_number = 3;
 
-  // Serialized content from Tensor::AsProtoTensorContent(). This representation
-  // can be used for all tensor types.
+  // Serialized raw tensor content from either Tensor::AsProtoTensorContent or
+  // memcpy in tensorflow::grpc::EncodeTensorToByteBuffer. This representation
+  // can be used for all tensor types. The purpose of this representation is to
+  // reduce serialization overhead during RPC call by avoiding serialization of
+  // many repeated small items.
   bytes tensor_content = 4;
 
   // Type specific representations that make it easy to create tensor protos in
@@ -68,5 +71,18 @@ message TensorProto {
   repeated double dcomplex_val = 12 [packed = true];
 
   // DT_RESOURCE
-  repeated ResourceHandle resource_handle_val = 14;
+  repeated ResourceHandleProto resource_handle_val = 14;
+
+  // DT_VARIANT
+  repeated VariantTensorDataProto variant_val = 15;
 };
+
+// Protocol buffer representing the serialization format of DT_VARIANT tensors.
+message VariantTensorDataProto {
+  // Name of the type of objects being serialized.
+  string type_name = 1;
+  // Portions of the object that are not Tensors.
+  bytes metadata = 2;
+  // Tensors contained within objects being serialized.
+  repeated TensorProto tensors = 3;
+}

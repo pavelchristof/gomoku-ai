@@ -16,15 +16,18 @@
 
 set -e
 
-sudo pip3 install auditwheel
+sudo pip3 install auditwheel==1.5.0
 
-# Install patchelf from source (it does not come with trusty package)
-wget https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2
-tar xfa patchelf-0.9.tar.bz2
-cd patchelf-0.9
-./configure --prefix=/usr/local
-make
-sudo make install
+set +e
+patchelf_location=$(which patchelf)
+if [[ -z "$patchelf_location" ]]; then
+  set -e
+  # Install patchelf from source (it does not come with trusty package)
+  wget https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2
+  tar xfa patchelf-0.9.tar.bz2
+  cd patchelf-0.9
+  ./configure --prefix=/usr/local
+  make
+  sudo make install
+fi
 cd ..
-
-

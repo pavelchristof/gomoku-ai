@@ -28,7 +28,7 @@ limitations under the License.
 // A danger of calling fork() (as opposed to clone() or vfork()) is that if
 // many people have used pthread_atfork() to acquire locks, fork() can deadlock,
 // because it's unlikely that the locking order will be correct in a large
-// programme where different layers are unaware of one another and using
+// program where different layers are unaware of one another and using
 // pthread_atfork() independently.
 //
 // The danger of not calling fork() is that if libc managed to use
@@ -446,7 +446,7 @@ int SubProcess::Communicate(const string* stdin_input, string* stdout_output,
             fds[i].fd = -1;
             fd_remain--;
           }
-        } else if ((fds[i].revents & POLLERR) != 0) {
+        } else if ((fds[i].revents & (POLLERR | POLLNVAL)) != 0) {
           fds[i].fd = -1;
           fd_remain--;
         }

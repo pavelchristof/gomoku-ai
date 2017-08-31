@@ -384,9 +384,8 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("Restrict", a=17)
     self.assertEqual(str(cm.exception),
-                     "DataType int32 for attr 'T' "
-                     "not in list of allowed values: "
-                     "string, bool")
+                     "Value passed to parameter 'a' has DataType int32 "
+                     "not in list of allowed values: string, bool")
 
   def testTypeList(self):
     self._add_op("name: 'TypeList' "
@@ -494,7 +493,7 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("TypeListRestrict", a=[True, 12])
     self.assertEqual(str(cm.exception),
-                     "DataType int32 for attr 'T' "
+                     "Value passed to parameter 'a' has DataType int32 "
                      "not in list of allowed values: string, bool")
 
   def testOutTypeListRestrict(self):
@@ -516,7 +515,7 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("OutTypeListRestrict", t=[dtypes.string, dtypes.int32])
     self.assertEqual(str(cm.exception),
-                     "DataType int32 for attr 't' "
+                     "Value passed to parameter 't' has DataType int32 "
                      "not in list of allowed values: string, bool")
 
   def testAttr(self):
@@ -1096,8 +1095,8 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("NPolymorphicRestrictIn", a=[1, 2])
     self.assertEqual(str(cm.exception),
-                     "DataType int32 for attr 'T' "
-                     "not in list of allowed values: string, bool")
+                     "Value passed to parameter 'a' has DataType int32 not in "
+                     "list of allowed values: string, bool")
 
   def testNInTwice(self):
     self._add_op("name: 'NInTwice' "
@@ -1423,7 +1422,7 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("NPolymorphicRestrictOut", N=2, T=dtypes.int32)
     self.assertEqual(str(cm.exception),
-                     "DataType int32 for attr 'T' "
+                     "Value passed to parameter 'T' has DataType int32 "
                      "not in list of allowed values: string, bool")
 
   def testRef(self):
@@ -1463,7 +1462,8 @@ class OpDefLibraryTest(test_util.TensorFlowTestCase):
     with self.assertRaises(TypeError) as cm:
       self._lib.apply_op("RefIn", a=2)
     self.assertEqual(str(cm.exception),
-                     "Input 'a' of 'RefIn' Op requires l-value input")
+                     "'RefIn' Op requires that input 'a' be a mutable tensor " +
+                     "(e.g.: a tf.Variable)")
 
     input_a = self._lib.apply_op("RefOut", T=dtypes.int32, name="t")
     input_b = self._lib.apply_op("RefOut", T=dtypes.int32, name="u")

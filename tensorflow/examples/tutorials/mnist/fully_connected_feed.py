@@ -20,7 +20,7 @@ from __future__ import print_function
 
 # pylint: disable=missing-docstring
 import argparse
-import os.path
+import os
 import sys
 import time
 
@@ -146,13 +146,13 @@ def run_training():
     init = tf.global_variables_initializer()
 
     # Create a saver for writing training checkpoints.
-    saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
+    saver = tf.train.Saver()
 
     # Create a session for running Ops on the Graph.
     sess = tf.Session()
 
     # Instantiate a SummaryWriter to output summaries and the Graph.
-    summary_writer = tf.train.SummaryWriter(FLAGS.log_dir, sess.graph)
+    summary_writer = tf.summary.FileWriter(FLAGS.log_dir, sess.graph)
 
     # And then after everything is built:
 
@@ -257,13 +257,15 @@ if __name__ == '__main__':
   parser.add_argument(
       '--input_data_dir',
       type=str,
-      default='/tmp/tensorflow/mnist/input_data',
+      default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
+                           'tensorflow/mnist/input_data'),
       help='Directory to put the input data.'
   )
   parser.add_argument(
       '--log_dir',
       type=str,
-      default='/tmp/tensorflow/mnist/logs/fully_connected_feed',
+      default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
+                           'tensorflow/mnist/logs/fully_connected_feed'),
       help='Directory to put the log data.'
   )
   parser.add_argument(

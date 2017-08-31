@@ -26,7 +26,11 @@ limitations under the License.
 #include "tensorflow/core/lib/core/errors.h"
 
 namespace {
-enum { QUANTIZE_MODE_MIN_COMBINED, QUANTIZE_MODE_MIN_FIRST };
+enum {
+  QUANTIZE_MODE_MIN_COMBINED,
+  QUANTIZE_MODE_MIN_FIRST,
+  QUANTIZE_MODE_SCALED,
+};
 }  // namespace
 
 namespace tensorflow {
@@ -41,22 +45,26 @@ template <typename Device, typename T>
 class QuantizeV2Op : public OpKernel {
  public:
   explicit QuantizeV2Op(OpKernelConstruction* ctx) : OpKernel(ctx) {
-    half_range_ = !std::is_signed<T>::value
-                      ? 0.0f
-                      : (std::numeric_limits<T>::max() -
-                         std::numeric_limits<T>::min() + 1) /
-                            2.0f;
+    half_range_ =
+        !std::is_signed<T>::value
+            ? 0.0f
+            : (static_cast<double>(std::numeric_limits<T>::max()) -
+               static_cast<double>(std::numeric_limits<T>::min()) + 1) /
+                  2.0f;
     string mode_string;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("mode", &mode_string));
     OP_REQUIRES(ctx,
-                (mode_string == "MIN_COMBINED" || mode_string == "MIN_FIRST"),
-                errors::InvalidArgument("Mode string must be 'MIN_COMBINED' or"
-                                        " 'MIN_FIRST', is '" +
+                (mode_string == "MIN_COMBINED" || mode_string == "MIN_FIRST" ||
+                 mode_string == "SCALED"),
+                errors::InvalidArgument("Mode string must be 'MIN_COMBINED',"
+                                        " 'MIN_FIRST', or 'SCALED', is '" +
                                         mode_string + "'"));
     if (mode_string == "MIN_COMBINED") {
       mode_ = QUANTIZE_MODE_MIN_COMBINED;
     } else if (mode_string == "MIN_FIRST") {
       mode_ = QUANTIZE_MODE_MIN_FIRST;
+    } else if (mode_string == "SCALED") {
+      mode_ = QUANTIZE_MODE_SCALED;
     }
   }
 
@@ -80,17 +88,19 @@ class QuantizeV2Op : public OpKernel {
     // overall range from the maximum, so that the value can be easily
     // represented when we promote the quantized value to a higher
     // intermediate bit depth, since that's a common requirement.
-    min_range = input_min_range;
+    min_range = std::min(0.0f, input_min_range);
     const float epsilon = std::max(1.0f, std::max(fabsf(input_min_range),
                                                   fabsf(input_max_range))) /
                           100.0f;
-    max_range = std::max(input_max_range, input_min_range + epsilon);
+    max_range = std::max(input_max_range, min_range + epsilon);
+    max_range = std::max(0.0f, max_range);
 
     Tensor* output = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, input.shape(), &output));
     if (mode_ == QUANTIZE_MODE_MIN_COMBINED) {
       const float scale_factor =
-          (std::numeric_limits<T>::max() - std::numeric_limits<T>::min()) /
+          (static_cast<double>(std::numeric_limits<T>::max()) -
+           static_cast<double>(std::numeric_limits<T>::min())) /
           (max_range - min_range);
 
       // Quantize:
@@ -103,7 +113,7 @@ class QuantizeV2Op : public OpKernel {
       // semantic of std::round, which implements "round-half-away-zero",
       // e.g., -5.5 gets rounded to -6, -5.4 goes to -5, 5.4 goes to 5,
       // and 5.5 goes to 6.
-      auto o = output->template flat<T>();
+      typename TTypes<T>::Vec o = output->template flat<T>();
       bool is_signed = std::is_signed<T>::value;
       if (is_signed) {
         // The slow path.
@@ -126,13 +136,56 @@ class QuantizeV2Op : public OpKernel {
       }
     } else if (mode_ == QUANTIZE_MODE_MIN_FIRST) {
       if (meta::IsSupportedAndEnabled() && std::is_same<T, quint8>()) {
-        auto input_array = input.flat<float>();
+        TTypes<const float>::Vec input_array = input.flat<float>();
+
         meta::Quantize(ctx, input_array.data(), input_array.size(), min_range,
                        max_range, output->flat<quint8>().data());
       } else {
         FloatTensorToQuantizedInPlaceUsingEigen<T>(
             ctx->template eigen_device<Device>(), input, min_range, max_range,
             output);
+      }
+    } else if (mode_ == QUANTIZE_MODE_SCALED) {
+      // The quantization logic for mode SCALED matches that of
+      // QuantizeAndDequantizeV2 and QuantizeAndDequantizeV3.
+      typename TTypes<T>::Vec o = output->template flat<T>();
+      static constexpr int num_bits = sizeof(T) * 8;
+      const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
+      bool is_signed = std::is_signed<T>::value;
+      if (is_signed) {
+        max_range = max_abs;
+        min_range = -max_abs;
+        // If it is signed, we try to keep 0.0 being 0 and drop one bucket. For
+        // example, if it is 8 bits, we have the range [-127, 127]. So for input
+        // range of [-x, x], the scale should be 254/(2*x).
+        const float target_range =
+            static_cast<float>((uint64_t{1} << (num_bits - 1)) - 1);
+        const float scale_factor = target_range / max_abs;
+        // Note that std::round is used to round the number before the cast.
+        // std::round implements "round-half-away-zero",
+        // e.g., -5.5 gets rounded to -6, -5.4 goes to -5, 5.4 goes to 5,
+        // and 5.5 goes to 6.
+        o.device(ctx->template eigen_device<Device>()) =
+            (input.flat<float>().cwiseMin(max_range).cwiseMax(min_range) *
+             scale_factor)
+                .round()
+                .template cast<T>();
+      } else {
+        max_range = max_abs;
+        min_range = 0.0;
+        // If it is unsigned and num_bits == 8, the range with 8 bits is [0,
+        // 255].  If the input range is [0, x], then the scale is x/255 instead
+        // of 254 as in the case above.
+        const float target_range =
+            static_cast<float>((uint64_t{1} << num_bits) - 1);
+        const float scale_factor = target_range / max_abs;
+        // Because input is unsigned, we don't need to implement "round away
+        // from zero".  The fast path avoids unaryExpr.
+        o.device(ctx->template eigen_device<Device>()) =
+            (input.flat<float>().cwiseMin(max_range).cwiseMax(min_range) *
+                 scale_factor +
+             0.5f)
+                .template cast<T>();
       }
     }
 
@@ -162,5 +215,8 @@ REGISTER_KERNEL_BUILDER(
 REGISTER_KERNEL_BUILDER(
     Name("QuantizeV2").Device(DEVICE_CPU).TypeConstraint<qint16>("T"),
     QuantizeV2Op<CPUDevice, qint16>);
+REGISTER_KERNEL_BUILDER(
+    Name("QuantizeV2").Device(DEVICE_CPU).TypeConstraint<qint32>("T"),
+    QuantizeV2Op<CPUDevice, qint32>);
 
 }  // namespace tensorflow

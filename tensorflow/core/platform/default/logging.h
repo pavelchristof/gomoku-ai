@@ -41,6 +41,21 @@ class LogMessage : public std::basic_ostringstream<char> {
   LogMessage(const char* fname, int line, int severity);
   ~LogMessage();
 
+  // Returns the minimum log level for VLOG statements.
+  // E.g., if MinVLogLevel() is 2, then VLOG(2) statements will produce output,
+  // but VLOG(3) will not. Defaults to 0.
+  static int64 MinVLogLevel();
+
+  // Returns whether VLOG level lvl is activated for the file fname.
+  //
+  // E.g. if the environment variable TF_CPP_VMODULE contains foo=3 and fname is
+  // foo.cc and lvl is <= 3, this will return true.
+  //
+  // It is expected that the result of this query will be cached in the VLOG-ing
+  // call site to avoid repeated lookups. This routine performs a hash-map
+  // access against the VLOG-ing specification provided by the env var.
+  static bool VmoduleActivated(const char* fname, int lvl);
+
  protected:
   void GenerateLogMessage();
 
@@ -67,13 +82,42 @@ class LogMessageFatal : public LogMessage {
 #define _TF_LOG_FATAL \
   ::tensorflow::internal::LogMessageFatal(__FILE__, __LINE__)
 
+#define _TF_LOG_QFATAL _TF_LOG_FATAL
+
 #define LOG(severity) _TF_LOG_##severity
 
-// TODO(jeff): Define a proper implementation of VLOG_IS_ON
-#define VLOG_IS_ON(lvl) ((lvl) <= 0)
+#if defined(IS_MOBILE_PLATFORM)
 
-#define VLOG(lvl)      \
-  if (VLOG_IS_ON(lvl)) \
+// Turn VLOG off when under mobile devices for considerations of binary size.
+#define _VLOG_IS_ON(lvl, file) ((lvl) <= 0)
+
+#elif defined(PLATFORM_WINDOWS)
+
+// TODO(b/64279502) The _VLOG_IS_ON definition below appears to cause MSVC to
+// fatal error, so we fall back to the vmodule-less implementation for now.
+#define _VLOG_IS_ON(lvl, file) \
+  ((lvl) <= ::tensorflow::internal::LogMessage::MinVLogLevel())
+
+#else
+
+// Otherwise, set TF_CPP_MIN_VLOG_LEVEL environment to update minimum log level
+// of VLOG, or TF_CPP_VMODULE to set the minimum log level for individual
+// translation units.
+#define _VLOG_IS_ON(lvl, file)                                              \
+  (([](int level, const char* fname) {                                      \
+    if (level <= ::tensorflow::internal::LogMessage::MinVLogLevel())        \
+      return true;                                                          \
+    static bool vmodule_activated =                                         \
+        ::tensorflow::internal::LogMessage::VmoduleActivated(fname, level); \
+    return vmodule_activated;                                               \
+  })(lvl, file))
+
+#endif
+
+#define VLOG_IS_ON(lvl) _VLOG_IS_ON(lvl, __FILE__)
+
+#define VLOG(lvl)                                   \
+  if (TF_PREDICT_FALSE(_VLOG_IS_ON(lvl, __FILE__))) \
   ::tensorflow::internal::LogMessage(__FILE__, __LINE__, tensorflow::INFO)
 
 // CHECK dies with a fatal error if condition is not true.  It is *not*
